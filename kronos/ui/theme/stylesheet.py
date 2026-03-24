@@ -71,22 +71,45 @@ QToolBar {{
 }}
 
 QToolButton {{
-    background: transparent;
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['bg_secondary']},
+        stop: 1 {c['bg_elevated']}
+    );
     color: {c['text_primary']};
-    border: 1px solid transparent;
-    border-radius: {r}px;
-    padding: 4px;
+    border: 1px solid {c['border']};
+    border-radius: {r + 1}px;
+    padding: 4px 6px;
+    font-weight: 600;
 }}
 
 QToolButton:hover {{
-    background: {c['bg_elevated']};
-    border-color: {c['border']};
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['bg_elevated']},
+        stop: 1 {c['bg_secondary']}
+    );
+    border-color: {c['accent']};
 }}
 
 QToolButton:pressed, QToolButton:checked {{
-    background: {c['bg_elevated']};
-    border-color: {c['accent']};
-    color: {c['accent_hover']};
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['accent_hover']},
+        stop: 1 {c['accent']}
+    );
+    border-color: {c['accent_hover']};
+    color: #ffffff;
+}}
+
+QToolButton:focus {{
+    border-color: {c['border_focus']};
+}}
+
+QToolButton:disabled {{
+    color: {c['text_secondary']};
+    border-color: {c['border']};
+    background: {c['bg_primary']};
 }}
 
 QTabWidget::pane {{
@@ -121,6 +144,19 @@ QTabWidget#ribbon_tabs QTabBar::tab {{
     min-width: 96px;
     padding: 6px 12px;
     font-weight: 600;
+    color: #F2F5FF;
+}}
+
+QTabWidget#ribbon_tabs QTabBar::tab:selected {{
+    color: {c['text_primary']};
+    background: {c['ribbon_tab_active']};
+    border-color: {c['accent']};
+}}
+
+QTabWidget#ribbon_tabs QTabBar::tab:hover:!selected {{
+    color: #F8FAFF;
+    background: {c['ribbon_tab_inactive']};
+    border-color: {c['accent']};
 }}
 
 QTabBar::tab:selected {{
@@ -206,20 +242,45 @@ QComboBox::drop-down {{
 }}
 
 QPushButton {{
-    background: {c['bg_elevated']};
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['bg_secondary']},
+        stop: 1 {c['bg_elevated']}
+    );
     color: {c['text_primary']};
     border: 1px solid {c['border']};
-    border-radius: {r}px;
-    padding: 6px {s + 2}px;
+    border-radius: {r + 2}px;
+    padding: 6px {s + 4}px;
+    font-weight: 600;
 }}
 
 QPushButton:hover {{
     border-color: {c['accent']};
-    color: {c['accent_hover']};
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['bg_elevated']},
+        stop: 1 {c['bg_secondary']}
+    );
 }}
 
-QPushButton:pressed {{
-    background: {c['bg_secondary']};
+QPushButton:pressed, QPushButton:checked {{
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['accent_hover']},
+        stop: 1 {c['accent']}
+    );
+    border-color: {c['accent_hover']};
+    color: #ffffff;
+}}
+
+QPushButton:focus {{
+    border-color: {c['border_focus']};
+}}
+
+QPushButton:disabled {{
+    color: {c['text_secondary']};
+    background: {c['bg_primary']};
+    border-color: {c['border']};
 }}
 
 QScrollBar:vertical, QScrollBar:horizontal {{
@@ -354,27 +415,46 @@ QLineEdit#ribbon_path {{
 }}
 
 QToolButton#ribbon_quick_button {{
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: {r}px;
-    padding: 2px 4px;
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['bg_secondary']},
+        stop: 1 {c['bg_elevated']}
+    );
+    border: 1px solid {c['border']};
+    border-radius: {r + 1}px;
+    padding: 3px 6px;
 }}
 
 QToolButton#ribbon_quick_button:hover {{
-    background: {c['bg_elevated']};
-    border-color: {c['border']};
+    border-color: {c['accent']};
+}}
+
+QToolButton#ribbon_quick_button:pressed {{
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 {c['accent_hover']},
+        stop: 1 {c['accent']}
+    );
+    border-color: {c['accent_hover']};
+    color: #ffffff;
 }}
 
 QToolButton#ribbon_path_button {{
-    background: transparent;
-    border: 1px solid transparent;
+    background: {c['bg_secondary']};
+    border: 1px solid {c['border']};
     border-radius: 3px;
-    padding: 2px;
+    padding: 2px 3px;
 }}
 
 QToolButton#ribbon_path_button:hover {{
     background: {c['bg_elevated']};
-    border-color: {c['border']};
+    border-color: {c['accent']};
+}}
+
+QToolButton#ribbon_path_button:pressed {{
+    background: {c['accent']};
+    border-color: {c['accent_hover']};
+    color: #ffffff;
 }}
 
 QWidget#left_toolbar {{
