@@ -1,0 +1,5 @@
+/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles/kronos_native.dir
+/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles/edit_cache.dir
+/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles/rebuild_cache.dir
+/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles/kronos_native_autogen_timestamp_deps.dir
+/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles/kronos_native_autogen.dir
