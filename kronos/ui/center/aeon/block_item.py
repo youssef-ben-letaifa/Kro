@@ -9,6 +9,7 @@ from PyQt6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PyQt6.QtWidgets import QGraphicsObject, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem
 
 from kronos.ui.center.aeon.block_registry import get_block_def, resolve_type
+from kronos.ui.theme.design_tokens import get_colors
 
 
 class BlockItem(QGraphicsObject):
@@ -35,6 +36,9 @@ class BlockItem(QGraphicsObject):
         self.block_type = block_type
         self.params = dict(params) if params else {}
         self._wire_update_callback = wire_update_callback
+        self._theme = "dark"
+        self._colors = get_colors(self._theme)
+        self._rotation_deg = 0.0
 
         # Resolve from registry for defaults
         bdef = get_block_def(block_type)
@@ -58,6 +62,7 @@ class BlockItem(QGraphicsObject):
         self.setFlag(QGraphicsObject.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsObject.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
+        self.setTransformOriginPoint(self.BLOCK_W / 2, self.BLOCK_H / 2)
         self._hovered = False
 
     def boundingRect(self) -> QRectF:
@@ -67,14 +72,18 @@ class BlockItem(QGraphicsObject):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         color = self._get_color()
+        is_dark = self._theme == "dark"
         fill = QColor(color)
-        fill.setAlpha(35 if not self._hovered else 55)
+        fill.setAlpha(40 if is_dark else 58)
+        if self._hovered:
+            fill.setAlpha(58 if is_dark else 84)
 
         # Block body
         if self.isSelected():
-            pen = QPen(QColor("#1a6fff"), 2.0)
+            pen = QPen(QColor(self._colors["accent"]), 2.0)
         elif self._hovered:
-            pen = QPen(QColor(color).lighter(130), 1.5)
+            edge = QColor(color).lighter(130) if is_dark else QColor(color).darker(125)
+            pen = QPen(edge, 1.5)
         else:
             pen = QPen(QColor(color), 1.2)
 
@@ -85,7 +94,7 @@ class BlockItem(QGraphicsObject):
 
         # ── Input ports (inward triangles) ──
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor("#ffffff"))
+        painter.setBrush(QColor("#ffffff" if is_dark else "#1f2937"))
         for i in range(self.num_inputs):
             y = self._port_y(i, self.num_inputs)
             self._draw_port_triangle(painter, 0, y, "input")
@@ -101,7 +110,8 @@ class BlockItem(QGraphicsObject):
         if not symbol:
             symbol = self.block_type[:6]
 
-        painter.setPen(QColor(color).lighter(150))
+        symbol_color = QColor(color).lighter(150) if is_dark else QColor(color).darker(170)
+        painter.setPen(symbol_color)
         font = QFont("Noto Sans", 11)
         font.setBold(True)
         painter.setFont(font)
@@ -109,7 +119,7 @@ class BlockItem(QGraphicsObject):
 
         # ── Block label (bottom) ──
         display = self._display_text()
-        painter.setPen(QColor("#8a92a2"))
+        painter.setPen(QColor(self._colors["text_secondary"]))
         font2 = QFont("Noto Sans", 7)
         painter.setFont(font2)
         label_rect = QRectF(4, self.BLOCK_H - 16, self.BLOCK_W - 8, 14)
@@ -204,6 +214,32 @@ class BlockItem(QGraphicsObject):
 
     def set_snap(self, enabled: bool) -> None:
         self._snap_enabled = enabled
+
+    def set_theme(self, theme: str) -> None:
+        self._theme = theme if theme in {"dark", "light"} else "dark"
+        self._colors = get_colors(self._theme)
+        self.update()
+
+    @property
+    def rotation_angle(self) -> float:
+        return float(self._rotation_deg)
+
+    def set_rotation(self, angle_deg: float) -> None:
+        normalized = float(angle_deg) % 360.0
+        self._rotation_deg = normalized
+        self.setRotation(normalized)
+        if self._wire_update_callback:
+            self._wire_update_callback(self.block_id)
+        self.update()
+
+    def rotate_cw(self) -> None:
+        self.set_rotation(self._rotation_deg + 90.0)
+
+    def rotate_ccw(self) -> None:
+        self.set_rotation(self._rotation_deg - 90.0)
+
+    def reset_rotation(self) -> None:
+        self.set_rotation(0.0)
 
     def itemChange(self, change, value):
         if change == QGraphicsObject.GraphicsItemChange.ItemPositionChange and self._snap_enabled:

@@ -6,7 +6,7 @@ import json
 from collections import defaultdict, deque
 
 from PyQt6.QtCore import QPointF, QRect, QTimer, Qt, pyqtSignal
-from PyQt6.QtGui import QBrush, QColor, QImage, QKeySequence, QPainter, QPainterPath, QPen
+from PyQt6.QtGui import QBrush, QColor, QImage, QKeySequence, QPainter, QPen
 from PyQt6.QtWidgets import (
     QFrame,
     QGraphicsPathItem,
@@ -24,6 +24,7 @@ from kronos.ui.center.aeon.block_item import BlockItem
 from kronos.ui.center.aeon.block_param_dialog import BlockParamDialog
 from kronos.ui.center.aeon.block_registry import SOURCE_TYPES, SINK_TYPES
 from kronos.ui.center.aeon.wire_item import WireItem
+from kronos.ui.theme.design_tokens import get_colors
 
 
 class AeonCanvas(QGraphicsView):
@@ -46,8 +47,18 @@ class AeonCanvas(QGraphicsView):
         self._connect_mode = True
         self._snap_to_grid = True
         self._grid_spacing = 20
+        self._theme = "dark"
+        self._colors = get_colors(self._theme)
+        self._grid_point_color = QColor("#1a1f2a")
+        self._pending_wire_color = QColor(self._colors["accent"])
         self._wire_animation_enabled = False
         self._flow_phase = 0.0
+        self._space_pan_mode = False
+        self._pan_active = False
+        self._pan_last_pos = QPointF()
+        self._runtime_time = 0.0
+        self._runtime_steps = 0
+        self._runtime_errors = 0
         self._native_renderer = CanvasRenderer()
         self._native_enabled = native_available()
 
@@ -59,10 +70,11 @@ class AeonCanvas(QGraphicsView):
         self._flow_timer = QTimer(self)
         self._flow_timer.timeout.connect(self._on_flow_tick)
         self._build_overlay_widgets()
+        self.set_theme(self._theme)
 
     def drawBackground(self, painter: QPainter, rect) -> None:  # noqa: N802
         painter.save()
-        painter.setPen(QColor("#1a1f2a"))
+        painter.setPen(self._grid_point_color)
         spacing = self._grid_spacing
         left = int(rect.left()) - (int(rect.left()) % spacing)
         top = int(rect.top()) - (int(rect.top()) % spacing)
@@ -95,7 +107,11 @@ class AeonCanvas(QGraphicsView):
             )
 
     def wheelEvent(self, event) -> None:
-        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+        modifiers = event.modifiers()
+        if modifiers in (
+            Qt.KeyboardModifier.NoModifier,
+            Qt.KeyboardModifier.ControlModifier,
+        ):
             delta = event.angleDelta().y()
             factor = 1.15 if delta > 0 else 0.87
             next_scale = self._scale_factor * factor
@@ -108,9 +124,13 @@ class AeonCanvas(QGraphicsView):
         super().wheelEvent(event)
 
     def mousePressEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.MiddleButton:
-            self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-            super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.MiddleButton or (
+            event.button() == Qt.MouseButton.LeftButton and self._space_pan_mode
+        ):
+            self._pan_active = True
+            self._pan_last_pos = event.position()
+            self._refresh_cursor()
+            event.accept()
             return
 
         if event.button() == Qt.MouseButton.LeftButton and self._connect_mode:
@@ -125,27 +145,36 @@ class AeonCanvas(QGraphicsView):
                         port_type, port_index = port_info
                         if port_type == "output" and self._pending_start is None:
                             self._start_pending_wire(item, port_index)
+                            self._refresh_cursor()
                             return
                     break # Only check the topmost BlockItem
                     
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event) -> None:
+        if self._pan_active:
+            delta = event.position() - self._pan_last_pos
+            self._pan_last_pos = event.position()
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - int(delta.x()))
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - int(delta.y()))
+            event.accept()
+            return
         if self._pending_wire is not None and self._pending_start is not None:
             start = self._pending_start["pos"]
             end = self.mapToScene(event.position().toPoint())
-            path = QPainterPath(start)
-            path.cubicTo(
-                QPointF(start.x() + 60, start.y()),
-                QPointF(end.x() - 60, end.y()),
-                end,
-            )
+            path = WireItem.build_orthogonal_path(start, end, self._grid_spacing)
             self._pending_wire.setPath(path)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.MiddleButton:
-            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+        if self._pan_active and event.button() in (
+            Qt.MouseButton.MiddleButton,
+            Qt.MouseButton.LeftButton,
+        ):
+            self._pan_active = False
+            self._refresh_cursor()
+            event.accept()
+            return
             
         elif event.button() == Qt.MouseButton.LeftButton and self._connect_mode and self._pending_start is not None:
             scene_pos = self.mapToScene(event.position().toPoint())
@@ -167,6 +196,10 @@ class AeonCanvas(QGraphicsView):
         super().mouseReleaseEvent(event)
 
     def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Space and not event.isAutoRepeat():
+            self._space_pan_mode = True
+            self._refresh_cursor()
+            return
         if event.key() == Qt.Key.Key_Delete:
             self._delete_selected()
             return
@@ -185,6 +218,13 @@ class AeonCanvas(QGraphicsView):
             return
         super().keyPressEvent(event)
 
+    def keyReleaseEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Space and not event.isAutoRepeat():
+            self._space_pan_mode = False
+            self._refresh_cursor()
+            return
+        super().keyReleaseEvent(event)
+
     def contextMenuEvent(self, event) -> None:
         scene_pos = self.mapToScene(event.pos())
         item = self._scene.itemAt(scene_pos, self.transform())
@@ -194,6 +234,9 @@ class AeonCanvas(QGraphicsView):
             delete_action = menu.addAction("Delete Block")
             dup_action = menu.addAction("Duplicate")
             scope_action = menu.addAction("Branch to Scope")
+            rotate_cw_action = menu.addAction("Rotate 90 CW")
+            rotate_ccw_action = menu.addAction("Rotate 90 CCW")
+            reset_rotation_action = menu.addAction("Reset Rotation")
             auto_action = menu.addAction("Auto Arrange")
             action = menu.exec(event.globalPos())
             if action == edit_action:
@@ -204,6 +247,18 @@ class AeonCanvas(QGraphicsView):
                 self._duplicate_block(item)
             elif action == scope_action:
                 self._branch_scope(item)
+            elif action == rotate_cw_action:
+                item.rotate_cw()
+                self._update_wires_for_block(item.block_id)
+                self.diagram_changed.emit()
+            elif action == rotate_ccw_action:
+                item.rotate_ccw()
+                self._update_wires_for_block(item.block_id)
+                self.diagram_changed.emit()
+            elif action == reset_rotation_action:
+                item.reset_rotation()
+                self._update_wires_for_block(item.block_id)
+                self.diagram_changed.emit()
             elif action == auto_action:
                 self.auto_arrange_left_to_right()
             return
@@ -218,13 +273,14 @@ class AeonCanvas(QGraphicsView):
 
     def _duplicate_block(self, block: BlockItem) -> None:
         new_pos = block.scenePos() + QPointF(20, 20)
-        self.add_block(
+        duplicate = self.add_block(
             block.block_type,
             dict(block.params),
             new_pos,
             input_count=block.num_inputs,
             output_count=block.num_outputs,
         )
+        duplicate.set_rotation(block.rotation_angle)
 
     def _branch_scope(self, block: BlockItem) -> None:
         if block.num_outputs <= 0:
@@ -252,8 +308,9 @@ class AeonCanvas(QGraphicsView):
         start = block.get_output_pos(port_index)
         self._pending_start = {"block": block, "port": port_index, "pos": start}
         self._pending_wire = QGraphicsPathItem()
-        self._pending_wire.setPen(QPen(QColor("#6a9acc"), 1.6))
+        self._pending_wire.setPen(QPen(self._pending_wire_color, 1.8))
         self._scene.addItem(self._pending_wire)
+        self._refresh_cursor()
 
     def _finish_pending_wire(self, dest_block: BlockItem, dest_port: int) -> None:
         if self._pending_start is None:
@@ -271,17 +328,11 @@ class AeonCanvas(QGraphicsView):
             self._scene.removeItem(self._pending_wire)
         self._pending_wire = None
         self._pending_start = None
+        self._refresh_cursor()
 
     def _build_overlay_widgets(self) -> None:
         self._zoom_widget = QFrame(self.viewport())
         self._zoom_widget.setObjectName("sim_zoom_controls")
-        self._zoom_widget.setStyleSheet(
-            "#sim_zoom_controls {"
-            " background: rgba(22, 27, 34, 220);"
-            " border: 1px solid #30363d;"
-            " border-radius: 6px;"
-            "}"
-        )
         zoom_layout = QHBoxLayout(self._zoom_widget)
         zoom_layout.setContentsMargins(6, 4, 6, 4)
         zoom_layout.setSpacing(6)
@@ -301,25 +352,18 @@ class AeonCanvas(QGraphicsView):
 
         self._status_widget = QFrame(self.viewport())
         self._status_widget.setObjectName("sim_runtime_status")
-        self._status_widget.setStyleSheet(
-            "#sim_runtime_status {"
-            " background: rgba(13, 17, 23, 230);"
-            " border: 1px solid #30363d;"
-            " border-radius: 6px;"
-            "}"
-        )
         status_layout = QHBoxLayout(self._status_widget)
         status_layout.setContentsMargins(8, 2, 8, 2)
         status_layout.setSpacing(10)
         self._sim_time_label = QLabel("t: 0.000 s")
         self._sim_steps_label = QLabel("steps: 0")
         self._sim_errors_label = QLabel("errors: 0")
-        self._sim_errors_label.setStyleSheet("color: #8b949e;")
         status_layout.addWidget(self._sim_time_label)
         status_layout.addWidget(self._sim_steps_label)
         status_layout.addWidget(self._sim_errors_label)
         status_layout.addStretch(1)
         self._status_widget.show()
+        self._apply_overlay_styles()
 
     def _zoom_in(self) -> None:
         factor = 1.15
@@ -338,12 +382,15 @@ class AeonCanvas(QGraphicsView):
             self._zoom_label.setText(f"{int(self._scale_factor * 100)}%")
 
     def set_runtime_status(self, sim_time: float, step_count: int, error_count: int = 0) -> None:
+        self._runtime_time = float(sim_time)
+        self._runtime_steps = int(step_count)
+        self._runtime_errors = int(error_count)
         self._sim_time_label.setText(f"t: {sim_time:.3f} s")
         self._sim_steps_label.setText(f"steps: {step_count}")
         if error_count > 0:
-            self._sim_errors_label.setStyleSheet("color: #f85149;")
+            self._sim_errors_label.setStyleSheet(f"color: {self._colors['error']};")
         else:
-            self._sim_errors_label.setStyleSheet("color: #8b949e;")
+            self._sim_errors_label.setStyleSheet(f"color: {self._colors['text_secondary']};")
         self._sim_errors_label.setText(f"errors: {error_count}")
 
     def set_wire_animation(self, enabled: bool) -> None:
@@ -472,6 +519,7 @@ class AeonCanvas(QGraphicsView):
         if block_id:
             block.block_id = block_id
         block.set_snap(self._snap_to_grid)
+        block.set_theme(self._theme)
         block.setPos(pos)
         block.block_double_clicked.connect(self.block_double_clicked.emit)
         self._scene.addItem(block)
@@ -504,6 +552,8 @@ class AeonCanvas(QGraphicsView):
                 self.remove_wire(wire_id)
 
         wire = WireItem(source_id, source_port, dest_id, dest_port)
+        wire.set_theme(self._theme)
+        wire.set_grid_spacing(self._grid_spacing)
         wire.set_animation_enabled(self._wire_animation_enabled)
         self._scene.addItem(wire)
         self._wires[wire.wire_id] = wire
@@ -553,6 +603,7 @@ class AeonCanvas(QGraphicsView):
                     "inputs": block.num_inputs,
                     "outputs": block.num_outputs,
                     "pos": [pos.x(), pos.y()],
+                    "rotation": block.rotation_angle,
                 }
             )
         wires = []
@@ -583,6 +634,7 @@ class AeonCanvas(QGraphicsView):
                 output_count=int(block_data.get("outputs", 1)),
                 block_id=original_id if original_id and original_id not in self._blocks else None,
             )
+            block.set_rotation(float(block_data.get("rotation", 0.0)))
             if original_id:
                 id_map[original_id] = block.block_id
 
@@ -612,12 +664,86 @@ class AeonCanvas(QGraphicsView):
         self._connect_mode = enabled
         if not enabled:
             self._clear_pending_wire()
+        self._refresh_cursor()
 
     def set_snap_to_grid(self, enabled: bool) -> None:
         """Enable or disable block snapping to grid."""
         self._snap_to_grid = enabled
         for block in self._blocks.values():
             block.set_snap(enabled)
+
+    def set_theme(self, theme: str) -> None:
+        self._theme = theme if theme in {"dark", "light"} else "dark"
+        self._colors = get_colors(self._theme)
+        if self._theme == "dark":
+            canvas_bg = "#080c14"
+            grid_color = "#1a1f2a"
+        else:
+            canvas_bg = "#f7fbff"
+            grid_color = "#c9d8ea"
+        self.setBackgroundBrush(QBrush(QColor(canvas_bg)))
+        self._grid_point_color = QColor(grid_color)
+        self._pending_wire_color = QColor(self._colors["accent"])
+        if self._pending_wire is not None:
+            self._pending_wire.setPen(QPen(self._pending_wire_color, 1.8))
+        for block in self._blocks.values():
+            block.set_theme(self._theme)
+        for wire in self._wires.values():
+            wire.set_theme(self._theme)
+        self._apply_overlay_styles()
+        self._refresh_cursor()
+        self.viewport().update()
+
+    def _apply_overlay_styles(self) -> None:
+        if self._theme == "dark":
+            overlay_bg = "rgba(22, 27, 34, 220)"
+            status_bg = "rgba(13, 17, 23, 230)"
+            border = "#30363d"
+            text = "#c8ccd4"
+        else:
+            overlay_bg = "rgba(255, 255, 255, 236)"
+            status_bg = "rgba(255, 255, 255, 238)"
+            border = "#b9cbe2"
+            text = "#334155"
+
+        self._zoom_widget.setStyleSheet(
+            "#sim_zoom_controls {"
+            f" background: {overlay_bg};"
+            f" border: 1px solid {border};"
+            " border-radius: 6px;"
+            "}"
+            "QPushButton {"
+            " min-height: 20px;"
+            " min-width: 20px;"
+            "}"
+        )
+        self._status_widget.setStyleSheet(
+            "#sim_runtime_status {"
+            f" background: {status_bg};"
+            f" border: 1px solid {border};"
+            " border-radius: 6px;"
+            "}"
+        )
+        self._zoom_label.setStyleSheet(f"color: {text};")
+        self._sim_time_label.setStyleSheet(f"color: {text};")
+        self._sim_steps_label.setStyleSheet(f"color: {text};")
+        self.set_runtime_status(
+            sim_time=self._runtime_time,
+            step_count=self._runtime_steps,
+            error_count=self._runtime_errors,
+        )
+
+    def _refresh_cursor(self) -> None:
+        if self._pan_active:
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            return
+        if self._space_pan_mode:
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
+            return
+        if self._connect_mode:
+            self.setCursor(Qt.CursorShape.CrossCursor)
+            return
+        self.setCursor(Qt.CursorShape.ArrowCursor)
 
     # ─── Validation ──────────────────────────────────────────────
 

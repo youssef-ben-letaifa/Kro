@@ -466,6 +466,7 @@ class CenterPanel(QWidget):
     def set_theme(self, is_dark: bool) -> None:
         """Apply theme to all opened editor tabs."""
         self._is_dark_theme = is_dark
+        self.aeon_canvas.set_theme("dark" if is_dark else "light")
         for idx in range(self.tabs.count()):
             page = self.tabs.widget(idx)
             if page is None:

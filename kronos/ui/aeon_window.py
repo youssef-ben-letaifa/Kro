@@ -37,7 +37,7 @@ from kronos.ui.center.aeon.block_registry import (
 from kronos.ui.center.aeon.canvas import AeonCanvas
 from kronos.ui.center.aeon.simulator import DiagramSimulator
 from kronos.ui.left_panel import BlockTreeWidget
-from kronos.ui.theme.design_tokens import COLORS
+from kronos.ui.theme.design_tokens import get_colors
 from kronos.ui.theme.fluent_icons import icon_for
 
 
@@ -72,7 +72,7 @@ class _RibbonGroup(QFrame):
 
 def _sim_icon(name: str, color: str | None = None) -> QIcon:
     """Create a Fluent icon for the Aeon ribbon."""
-    tint = color or COLORS["text_primary"]
+    tint = color or get_colors("dark")["text_primary"]
     return icon_for(name, size=22, color=tint)
 
 
@@ -80,19 +80,23 @@ def _ribbon_button(
     text: str,
     tooltip: str,
     icon_name: str,
-    color: str = "#c8ccd4",
+    icon_role: str = "text_secondary",
     *,
     checkable: bool = False,
 ) -> QToolButton:
+    base_colors = get_colors("dark")
+    icon_color = base_colors.get(icon_role, icon_role)
     btn = QToolButton()
     btn.setObjectName("ribbon_action")
     btn.setText(text)
     btn.setToolTip(tooltip)
-    btn.setIcon(_sim_icon(icon_name, color))
+    btn.setIcon(_sim_icon(icon_name, icon_color))
     btn.setIconSize(QSize(22, 22))
     btn.setMinimumSize(32, 32)
     btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
     btn.setCheckable(checkable)
+    btn.setProperty("icon_name", icon_name)
+    btn.setProperty("icon_role", icon_role)
     return btn
 
 
@@ -103,14 +107,17 @@ def _ribbon_button(
 class _BlockPreviewGrid(QScrollArea):
     """Right pane of the library browser showing block icons in a grid."""
 
-    def __init__(self) -> None:
+    def __init__(self, theme: str = "dark") -> None:
         super().__init__()
+        self._theme = theme if theme in {"dark", "light"} else "dark"
         self.setWidgetResizable(True)
+        self.setFrameShape(QFrame.Shape.NoFrame)
         self._container = QWidget()
         self._grid = QGridLayout(self._container)
         self._grid.setSpacing(12)
         self._grid.setContentsMargins(12, 12, 12, 12)
         self.setWidget(self._container)
+        self.set_theme(self._theme)
 
     def show_blocks(self, blocks: list[BlockDef]) -> None:
         # Clear existing
@@ -123,42 +130,49 @@ class _BlockPreviewGrid(QScrollArea):
         cols = 4
         for idx, bdef in enumerate(blocks):
             row, col = divmod(idx, cols)
-            card = _DraggableBlockCard(bdef)
+            card = _DraggableBlockCard(bdef, self._theme)
             self._grid.addWidget(card, row, col)
         # Add stretch at bottom
         self._grid.setRowStretch(len(blocks) // cols + 1, 1)
+
+    def set_theme(self, theme: str) -> None:
+        self._theme = theme if theme in {"dark", "light"} else "dark"
+        colors = get_colors(self._theme)
+        self._container.setStyleSheet(f"background: {colors['bg_primary']};")
+        self.setStyleSheet(f"QScrollArea {{ border: none; background: {colors['bg_primary']}; }}")
+        for idx in range(self._grid.count()):
+            item = self._grid.itemAt(idx)
+            widget = item.widget()
+            if isinstance(widget, _DraggableBlockCard):
+                widget.set_theme(self._theme)
 
 
 class _DraggableBlockCard(QWidget):
     """A card showing a block preview that can be dragged to the canvas."""
 
-    def __init__(self, bdef: BlockDef) -> None:
+    def __init__(self, bdef: BlockDef, theme: str = "dark") -> None:
         super().__init__()
         self._bdef = bdef
+        self._theme = theme if theme in {"dark", "light"} else "dark"
         self.setFixedSize(120, 90)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
-        self.setStyleSheet(
-            "QWidget { background: #13192a; border: 1px solid #1e2128;"
-            " border-radius: 4px; }"
-        )
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 6, 4, 4)
         layout.setSpacing(2)
 
         # Block icon preview
-        icon_label = QLabel()
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_label.setPixmap(self._block_preview_pixmap(bdef))
-        layout.addWidget(icon_label, 1)
+        self._icon_label = QLabel()
+        self._icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self._icon_label, 1)
 
-        name = QLabel(bdef.type)
-        name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        name.setStyleSheet("color: #c8ccd4; font-size: 9px; border: none;")
-        name.setWordWrap(True)
-        layout.addWidget(name)
+        self._name = QLabel(bdef.type)
+        self._name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._name.setWordWrap(True)
+        layout.addWidget(self._name)
 
         self.setToolTip(f"{bdef.type}\n{bdef.description}")
         self._drag_start_pos = None
+        self.set_theme(self._theme)
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
@@ -189,15 +203,36 @@ class _DraggableBlockCard(QWidget):
         drag.setMimeData(mime)
         
         # Use a nice drag pixmap
-        drag.setPixmap(self._block_preview_pixmap(self._bdef))
+        drag.setPixmap(self._block_preview_pixmap(self._bdef, self._theme))
         drag.setHotSpot(QPointF(40, 20).toPoint())  # Center of the 80x40 pixmap
         
         drag.exec(Qt.DropAction.CopyAction)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self._drag_start_pos = None
 
+    def set_theme(self, theme: str) -> None:
+        self._theme = theme if theme in {"dark", "light"} else "dark"
+        colors = get_colors(self._theme)
+        if self._theme == "dark":
+            card_bg = "#13192a"
+            border = "#1e2128"
+            text = "#c8ccd4"
+        else:
+            card_bg = "#ffffff"
+            border = "#bfd4ee"
+            text = "#334155"
+        self.setStyleSheet(
+            "QWidget {"
+            f" background: {card_bg};"
+            f" border: 1px solid {border};"
+            " border-radius: 4px;"
+            "}"
+        )
+        self._name.setStyleSheet(f"color: {text}; font-size: 9px; border: none;")
+        self._icon_label.setPixmap(self._block_preview_pixmap(self._bdef, self._theme))
+
     @staticmethod
-    def _block_preview_pixmap(bdef: BlockDef) -> QPixmap:
+    def _block_preview_pixmap(bdef: BlockDef, theme: str = "dark") -> QPixmap:
         w, h = 80, 40
         pix = QPixmap(w, h)
         pix.fill(Qt.GlobalColor.transparent)
@@ -205,14 +240,14 @@ class _DraggableBlockCard(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         fill = QColor(bdef.color)
-        fill.setAlpha(200)
+        fill.setAlpha(200 if theme == "dark" else 170)
         p.setPen(QPen(QColor(bdef.color), 1.2))
         p.setBrush(fill)
         p.drawRoundedRect(QRectF(4, 4, w - 8, h - 8), 4, 4)
 
         # Input ports
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor("#ffffff"))
+        p.setBrush(QColor("#ffffff" if theme == "dark" else "#334155"))
         for i in range(bdef.inputs):
             y = h / 2 if bdef.inputs == 1 else 10 + i * (h - 20) / max(1, bdef.inputs - 1)
             _draw_port_triangle(p, 4, y, "input")
@@ -223,7 +258,7 @@ class _DraggableBlockCard(QWidget):
             _draw_port_triangle(p, w - 4, y, "output")
 
         # Block label
-        p.setPen(QColor("#ffffff"))
+        p.setPen(QColor("#ffffff" if theme == "dark" else "#0f172a"))
         font = QFont("Noto Sans", 7)
         font.setBold(True)
         p.setFont(font)
@@ -252,39 +287,33 @@ def _draw_port_triangle(p: QPainter, x: float, y: float, kind: str) -> None:
 class AeonLibrary(QWidget):
     """Two-pane library browser matching MATLAB Aeon Library Browser."""
 
-    def __init__(self) -> None:
+    def __init__(self, theme: str = "dark") -> None:
         super().__init__()
+        self._theme = theme if theme in {"dark", "light"} else "dark"
+        self._colors = get_colors(self._theme)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         # Title bar
-        title_bar = QWidget()
-        title_bar.setObjectName("panel_header")
-        title_bar.setStyleSheet(
-            "#panel_header { background: #0b0e15; border-bottom: 1px solid #1e2128; padding: 4px 8px; }"
-        )
-        tb_layout = QHBoxLayout(title_bar)
+        self._title_bar = QWidget()
+        self._title_bar.setObjectName("panel_header")
+        tb_layout = QHBoxLayout(self._title_bar)
         tb_layout.setContentsMargins(6, 4, 6, 4)
-        title_lbl = QLabel("Aeon Library Browser")
-        title_lbl.setStyleSheet("color: #c8ccd4; font-weight: bold; font-size: 11px;")
-        tb_layout.addWidget(title_lbl)
+        self._title_lbl = QLabel("Aeon Library Browser")
+        tb_layout.addWidget(self._title_lbl)
         tb_layout.addStretch(1)
-        layout.addWidget(title_bar)
+        layout.addWidget(self._title_bar)
 
         # Search
         self._search = QLineEdit()
-        self._search.setPlaceholderText("🔍 Search blocks…")
-        self._search.setStyleSheet(
-            "QLineEdit { background: #101828; color: #c8ccd4; border: 1px solid #1e2a3c;"
-            " border-radius: 3px; padding: 4px 8px; margin: 4px 6px; }"
-        )
+        self._search.setPlaceholderText("Search blocks...")
         self._search.textChanged.connect(self._filter_items)
         layout.addWidget(self._search)
 
         # Two-pane splitter
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setChildrenCollapsible(False)
+        self._splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._splitter.setChildrenCollapsible(False)
 
         # Left: category tree
         self._tree = QTreeWidget()
@@ -293,22 +322,23 @@ class AeonLibrary(QWidget):
         self._tree.setMinimumWidth(160)
 
         # Right: block preview grid
-        self._preview = _BlockPreviewGrid()
+        self._preview = _BlockPreviewGrid(self._theme)
 
         # Also keep block tree for drag-and-drop
         self.blocks_tree = BlockTreeWidget()
         self.blocks_tree.hide()
 
-        splitter.addWidget(self._tree)
-        splitter.addWidget(self._preview)
-        splitter.setSizes([180, 300])
-        layout.addWidget(splitter, 1)
+        self._splitter.addWidget(self._tree)
+        self._splitter.addWidget(self._preview)
+        self._splitter.setSizes([180, 300])
+        layout.addWidget(self._splitter, 1)
 
         self._build_tree()
         self._tree.currentItemChanged.connect(self._on_category_selected)
         # Pre-select first category
         if self._tree.topLevelItemCount() > 0:
             self._tree.setCurrentItem(self._tree.topLevelItem(0))
+        self.set_theme(self._theme)
 
     def _build_tree(self) -> None:
         """Populate the tree and hidden drag tree from registry."""
@@ -322,7 +352,7 @@ class AeonLibrary(QWidget):
             for bdef in blocks:
                 child = QTreeWidgetItem([bdef.type])
                 child.setData(0, Qt.ItemDataRole.UserRole, bdef.type)
-                child.setIcon(0, _block_tree_icon(bdef))
+                child.setIcon(0, _block_tree_icon(bdef, self._theme))
                 cat_item.addChild(child)
 
             # Drag-enabled tree (hidden, used for DnD onto canvas)
@@ -341,7 +371,7 @@ class AeonLibrary(QWidget):
                 child = QTreeWidgetItem([bdef.type])
                 child.setData(0, Qt.ItemDataRole.UserRole, payload)
                 child.setFlags(child.flags() | Qt.ItemFlag.ItemIsDragEnabled)
-                child.setIcon(0, _block_tree_icon(bdef))
+                child.setIcon(0, _block_tree_icon(bdef, self._theme))
                 parent_drag.addChild(child)
         self.blocks_tree.expandAll()
         self._tree.expandAll()
@@ -380,8 +410,70 @@ class AeonLibrary(QWidget):
         for idx in range(self._tree.topLevelItemCount()):
             _match(self._tree.topLevelItem(idx))
 
+    def set_theme(self, theme: str) -> None:
+        self._theme = theme if theme in {"dark", "light"} else "dark"
+        self._colors = get_colors(self._theme)
+        c = self._colors
+        self._title_bar.setStyleSheet(
+            f"background: {c['bg_secondary']};"
+            f"border-bottom: 1px solid {c['border']};"
+            "padding: 4px 8px;"
+        )
+        self._title_lbl.setStyleSheet(
+            f"color: {c['text_primary']}; font-weight: 700; font-size: 11px;"
+        )
+        self._search.setStyleSheet(
+            "QLineEdit {"
+            f" background: {c['bg_elevated']};"
+            f" color: {c['text_primary']};"
+            f" border: 1px solid {c['border']};"
+            " border-radius: 4px;"
+            " padding: 4px 8px;"
+            " margin: 4px 6px;"
+            "}"
+            "QLineEdit:focus {"
+            f" border: 1px solid {c['border_focus']};"
+            "}"
+        )
+        self._tree.setStyleSheet(
+            "QTreeWidget {"
+            f" background: {c['bg_secondary']};"
+            f" color: {c['text_primary']};"
+            f" border: 1px solid {c['border']};"
+            "}"
+            "QTreeWidget::item:selected {"
+            f" background: {c['bg_elevated']};"
+            f" color: {c['text_primary']};"
+            "}"
+        )
+        self._splitter.setStyleSheet(
+            "QSplitter::handle {"
+            f" background: {c['border']};"
+            "}"
+        )
+        self._preview.set_theme(self._theme)
+        self._refresh_tree_icons()
 
-def _block_tree_icon(bdef: BlockDef) -> QIcon:
+    def _refresh_tree_icons(self) -> None:
+        for idx in range(self._tree.topLevelItemCount()):
+            parent = self._tree.topLevelItem(idx)
+            for child_idx in range(parent.childCount()):
+                child = parent.child(child_idx)
+                bdef = get_block_def(child.text(0))
+                if bdef is not None:
+                    child.setIcon(0, _block_tree_icon(bdef, self._theme))
+        for idx in range(self.blocks_tree.topLevelItemCount()):
+            parent = self.blocks_tree.topLevelItem(idx)
+            for child_idx in range(parent.childCount()):
+                child = parent.child(child_idx)
+                payload = child.data(0, Qt.ItemDataRole.UserRole)
+                block_type = payload.get("type") if isinstance(payload, dict) else child.text(0)
+                bdef = get_block_def(str(block_type))
+                if bdef is not None:
+                    child.setIcon(0, _block_tree_icon(bdef, self._theme))
+
+
+def _block_tree_icon(bdef: BlockDef, theme: str = "dark") -> QIcon:
     """16×16 icon for the library tree."""
     pixmap = QPixmap(16, 16)
     pixmap.fill(Qt.GlobalColor.transparent)
@@ -390,12 +482,12 @@ def _block_tree_icon(bdef: BlockDef) -> QIcon:
     color = QColor(bdef.color)
     p.setPen(QPen(color, 1.1))
     fill = QColor(color)
-    fill.setAlpha(190)
+    fill.setAlpha(190 if theme == "dark" else 170)
     p.setBrush(fill)
     p.drawRoundedRect(QRectF(2, 3, 12, 10), 2.0, 2.0)
 
     # Input/output port dots
-    p.setBrush(QColor("#ffffff"))
+    p.setBrush(QColor("#ffffff" if theme == "dark" else "#334155"))
     p.setPen(Qt.PenStyle.NoPen)
     if bdef.inputs > 0:
         p.drawEllipse(QPointF(2.2, 8.0), 1.2, 1.2)
@@ -403,7 +495,7 @@ def _block_tree_icon(bdef: BlockDef) -> QIcon:
         p.drawEllipse(QPointF(13.8, 8.0), 1.2, 1.2)
 
     # Center symbol
-    p.setPen(QPen(QColor("#e8eaf0"), 1.0))
+    p.setPen(QPen(QColor("#e8eaf0" if theme == "dark" else "#0f172a"), 1.0))
     sym = bdef.symbol[:3] if bdef.symbol else bdef.type[:3]
     font = QFont("Noto Sans", 5)
     p.setFont(font)
@@ -426,17 +518,22 @@ class AeonWindow(QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Aeon — Kronos 2026.1")
         self.setMinimumSize(1200, 720)
+        parent_theme = getattr(parent, "_current_theme", "light")
+        self._theme = parent_theme if parent_theme in {"dark", "light"} else "light"
+        self._colors = get_colors(self._theme)
 
         self._simulator = DiagramSimulator()
         self._sim_thread: QThread | None = None
 
         self.aeon_canvas = AeonCanvas()
+        self.aeon_canvas.set_theme(self._theme)
         self.aeon_canvas.load_demo_diagram()
 
-        self._library = AeonLibrary()
+        self._library = AeonLibrary(self._theme)
 
         self._build_ui()
         self._connect_signals()
+        self.set_theme(self._theme)
 
     # ---------------------------------------------------------------
     # UI Construction
@@ -452,46 +549,42 @@ class AeonWindow(QMainWindow):
         layout.addWidget(self._build_ribbon())
 
         # ── Model name bar ──
-        name_bar = QWidget()
-        name_bar.setStyleSheet(
-            "background: #0e1117; border-bottom: 1px solid #1e2128; padding: 2px 10px;"
-        )
-        nb_layout = QHBoxLayout(name_bar)
+        self._name_bar = QWidget()
+        self._name_bar.setObjectName("aeon_model_bar")
+        nb_layout = QHBoxLayout(self._name_bar)
         nb_layout.setContentsMargins(10, 2, 10, 2)
         self._model_name = QLabel("untitled")
-        self._model_name.setStyleSheet("color: #c8ccd4; font-size: 12px;")
+        self._model_name.setObjectName("aeon_model_name")
         nb_layout.addWidget(self._model_name)
         nb_layout.addStretch(1)
-        layout.addWidget(name_bar)
+        layout.addWidget(self._name_bar)
 
         # ── Main content: library + canvas ──
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setChildrenCollapsible(False)
-        splitter.addWidget(self._library)
-        splitter.addWidget(self.aeon_canvas)
-        splitter.setSizes([280, 920])
-        layout.addWidget(splitter, 1)
+        self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._main_splitter.setChildrenCollapsible(False)
+        self._main_splitter.addWidget(self._library)
+        self._main_splitter.addWidget(self.aeon_canvas)
+        self._main_splitter.setSizes([280, 920])
+        layout.addWidget(self._main_splitter, 1)
 
         # ── Status bar ──
-        status = QWidget()
-        status.setFixedHeight(24)
-        status.setStyleSheet(
-            "background: #080c14; border-top: 1px solid #1e2128;"
-        )
-        sb_layout = QHBoxLayout(status)
+        self._status_bar = QWidget()
+        self._status_bar.setObjectName("aeon_status_bar")
+        self._status_bar.setFixedHeight(24)
+        sb_layout = QHBoxLayout(self._status_bar)
         sb_layout.setContentsMargins(10, 0, 10, 0)
         self._status = QLabel("Ready")
-        self._status.setStyleSheet("color: #6a7280; font-size: 10px;")
+        self._status.setObjectName("aeon_status_text")
         sb_layout.addWidget(self._status)
         sb_layout.addStretch(1)
         self._zoom_label = QLabel("100%")
-        self._zoom_label.setStyleSheet("color: #6a7280; font-size: 10px;")
+        self._zoom_label.setObjectName("aeon_status_text")
         sb_layout.addWidget(self._zoom_label)
         sb_layout.addWidget(self._sep())
         self._solver_label = QLabel("VariableStepAuto")
-        self._solver_label.setStyleSheet("color: #6a7280; font-size: 10px;")
+        self._solver_label.setObjectName("aeon_status_text")
         sb_layout.addWidget(self._solver_label)
-        layout.addWidget(status)
+        layout.addWidget(self._status_bar)
 
         self.setCentralWidget(root)
 
@@ -549,7 +642,7 @@ class AeonWindow(QMainWindow):
         time_l.setContentsMargins(0, 0, 0, 0)
         time_l.setSpacing(2)
         st_lbl = QLabel("Stop Time")
-        st_lbl.setStyleSheet("color:#6a7280;font-size:9px;")
+        st_lbl.setObjectName("aeon_small_label")
         st_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._t_end_spin = QDoubleSpinBox()
         self._t_end_spin.setRange(0.0, 10000.0)
@@ -566,7 +659,7 @@ class AeonWindow(QMainWindow):
         solver_l.setContentsMargins(0, 0, 0, 0)
         solver_l.setSpacing(2)
         sv_lbl = QLabel("Solver")
-        sv_lbl.setStyleSheet("color:#6a7280;font-size:9px;")
+        sv_lbl.setObjectName("aeon_small_label")
         sv_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._solver_combo = QComboBox()
         self._solver_combo.addItems(["Normal", "Accelerator", "Rapid Accelerator"])
@@ -581,7 +674,7 @@ class AeonWindow(QMainWindow):
         dt_l.setContentsMargins(0, 0, 0, 0)
         dt_l.setSpacing(2)
         dt_lbl = QLabel("dt")
-        dt_lbl.setStyleSheet("color:#6a7280;font-size:9px;")
+        dt_lbl.setObjectName("aeon_small_label")
         dt_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._dt_spin = QDoubleSpinBox()
         self._dt_spin.setRange(0.001, 1.0)
@@ -594,8 +687,8 @@ class AeonWindow(QMainWindow):
         g_sim.add_widget(dt_w)
 
         # Simulation buttons
-        self._run_btn = _ribbon_button("Run", "Run Simulation (F5)", "run", "#98c379")
-        self._stop_btn = _ribbon_button("Stop", "Stop Simulation", "stop", "#e06c75")
+        self._run_btn = _ribbon_button("Run", "Run Simulation (F5)", "run", "success")
+        self._stop_btn = _ribbon_button("Stop", "Stop Simulation", "stop", "error")
         g_sim.add_widget(self._run_btn)
         g_sim.add_widget(self._stop_btn)
         g_sim.finalize()
@@ -607,7 +700,7 @@ class AeonWindow(QMainWindow):
         self._validate_btn = _ribbon_button("Validate", "Validate Model", "validate")
         self._arrange_btn = _ribbon_button("Arrange", "Auto Arrange", "arrange")
         self._fit_btn = _ribbon_button("Fit View", "Fit View", "fit")
-        self._clear_btn = _ribbon_button("Clear", "Clear Canvas", "clear", "#e06c75")
+        self._clear_btn = _ribbon_button("Clear", "Clear Canvas", "clear", "error")
         g_tools.add_widget(self._validate_btn)
         g_tools.add_widget(self._arrange_btn)
         g_tools.add_widget(self._fit_btn)
@@ -655,7 +748,7 @@ class AeonWindow(QMainWindow):
         row = QHBoxLayout(panel)
         row.setContentsMargins(8, 4, 8, 4)
         lbl = QLabel("Format tools — coming soon")
-        lbl.setStyleSheet("color: #6a7280;")
+        lbl.setObjectName("aeon_muted_text")
         row.addWidget(lbl)
         row.addStretch(1)
         return panel
@@ -666,7 +759,7 @@ class AeonWindow(QMainWindow):
         row = QHBoxLayout(panel)
         row.setContentsMargins(8, 4, 8, 4)
         lbl = QLabel("Apps — coming soon")
-        lbl.setStyleSheet("color: #6a7280;")
+        lbl.setObjectName("aeon_muted_text")
         row.addWidget(lbl)
         row.addStretch(1)
         return panel
@@ -681,8 +774,73 @@ class AeonWindow(QMainWindow):
     @staticmethod
     def _sep() -> QLabel:
         lbl = QLabel("  |  ")
-        lbl.setStyleSheet("color: #3a4050;")
+        lbl.setObjectName("aeon_sep")
         return lbl
+
+    def set_theme(self, theme: str) -> None:
+        self._theme = theme if theme in {"dark", "light"} else "dark"
+        self._colors = get_colors(self._theme)
+        c = self._colors
+        self._name_bar.setStyleSheet(
+            f"background: {c['bg_secondary']};"
+            f"border-bottom: 1px solid {c['border']};"
+            "padding: 2px 10px;"
+        )
+        self._status_bar.setStyleSheet(
+            f"background: {c['bg_secondary']};"
+            f"border-top: 1px solid {c['border']};"
+        )
+        self._main_splitter.setStyleSheet(
+            "QSplitter::handle {"
+            f" background: {c['border']};"
+            "}"
+        )
+        self.setStyleSheet(
+            "QLabel#aeon_model_name {"
+            f" color: {c['text_primary']};"
+            " font-size: 12px;"
+            " font-weight: 600;"
+            "}"
+            "QLabel#aeon_status_text {"
+            f" color: {c['text_secondary']};"
+            " font-size: 10px;"
+            "}"
+            "QLabel#aeon_sep {"
+            f" color: {c['text_secondary']};"
+            "}"
+            "QLabel#aeon_muted_text {"
+            f" color: {c['text_secondary']};"
+            "}"
+            "QLabel#aeon_small_label {"
+            f" color: {c['text_secondary']};"
+            " font-size: 9px;"
+            "}"
+            "QFrame#ribbon_divider {"
+            f" background: {c['ribbon_tab_border']};"
+            "}"
+            "QToolButton#ribbon_action {"
+            f" color: {c['text_primary']};"
+            "}"
+        )
+        self._library.set_theme(self._theme)
+        self.aeon_canvas.set_theme(self._theme)
+        self._refresh_ribbon_icons()
+
+    def _resolve_icon_tint(self, icon_role: str | None) -> str:
+        if not icon_role:
+            return self._colors["text_secondary"]
+        return self._colors.get(icon_role, icon_role)
+
+    def _refresh_ribbon_icons(self) -> None:
+        for btn in self.findChildren(QToolButton):
+            if btn.objectName() != "ribbon_action":
+                continue
+            icon_name = btn.property("icon_name")
+            if not isinstance(icon_name, str) or not icon_name:
+                continue
+            icon_role = btn.property("icon_role")
+            role_name = icon_role if isinstance(icon_role, str) else "text_secondary"
+            btn.setIcon(_sim_icon(icon_name, self._resolve_icon_tint(role_name)))
 
     # ---------------------------------------------------------------
     # Signal connections
@@ -838,7 +996,7 @@ class AeonWindow(QMainWindow):
             outputs = result.get("outputs", {})
             if outputs:
                 import matplotlib.pyplot as plt
-                current_theme = getattr(self.parent(), "_current_theme", "dark")
+                current_theme = self._theme
                 is_dark = current_theme == "dark"
                 if is_dark:
                     fig_face = "#08090e"

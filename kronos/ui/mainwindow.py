@@ -164,6 +164,8 @@ class MainWindow(QMainWindow):
         self.figure_panel.set_theme(is_dark)
         if hasattr(self.left_panel, "set_theme"):
             self.left_panel.set_theme(is_dark)
+        if self._aeon_window is not None:
+            self._aeon_window.set_theme(self._current_theme)
 
     def _center_on_screen(self) -> None:
         screen = QApplication.primaryScreen()
@@ -763,6 +765,7 @@ class MainWindow(QMainWindow):
                 self._aeon_window.setWindowIcon(self.windowIcon())
             except Exception:
                 pass
+        self._aeon_window.set_theme(self._current_theme)
         self._aeon_window.show()
         self._aeon_window.raise_()
         self._aeon_window.activateWindow()
