@@ -62,7 +62,7 @@ class MatlabRibbon(QWidget):
     rootlocus_requested = pyqtSignal()
     pid_requested = pyqtSignal()
     lqr_requested = pyqtSignal()
-    simulink_requested = pyqtSignal()
+    aeon_requested = pyqtSignal()
     theme_toggle_requested = pyqtSignal()
     action_requested = pyqtSignal(str)
 
@@ -199,9 +199,9 @@ class MatlabRibbon(QWidget):
         code.finalize()
         row.addWidget(code)
 
-        sim = _RibbonGroup("SIMULINK")
+        sim = _RibbonGroup("AEON")
         sim.add_button(
-            self._action_button("Simulink", "Open Simulink window", "simulink", signal=self.simulink_requested)
+            self._action_button("Aeon", "Open Aeon window", "aeon", signal=self.aeon_requested)
         )
         sim.finalize()
         row.addWidget(sim)
@@ -287,15 +287,15 @@ class MatlabRibbon(QWidget):
         ml.finalize()
         row.addWidget(ml)
 
-        simulink = _RibbonGroup("SIMULINK")
-        simulink.add_button(
-            self._action_button("Simulink", "Open Simulink", "simulink", signal=self.simulink_requested)
+        aeon = _RibbonGroup("AEON")
+        aeon.add_button(
+            self._action_button("Aeon", "Open Aeon", "aeon", signal=self.aeon_requested)
         )
-        simulink.add_button(
+        aeon.add_button(
             self._action_button("Blocks", "Show block browser", "blocks", action_id="show_blocks")
         )
-        simulink.finalize()
-        row.addWidget(simulink)
+        aeon.finalize()
+        row.addWidget(aeon)
 
         row.addStretch(1)
         return panel
@@ -549,7 +549,7 @@ class MatlabRibbon(QWidget):
             "analysis": colors["accent_violet"],
             "workspace": colors["accent_amber"],
             "apps": colors["accent_violet"],
-            "simulink": colors["accent_amber"],
+            "aeon": colors["accent_amber"],
             "database": colors["accent_amber"],
             "new": colors["accent"],
             "open": colors["accent_amber"],

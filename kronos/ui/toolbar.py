@@ -22,7 +22,7 @@ class KronosToolBar(QToolBar):
     pid_requested = pyqtSignal()
     lqr_requested = pyqtSignal()
     theme_toggle_requested = pyqtSignal()
-    simulink_requested = pyqtSignal()
+    aeon_requested = pyqtSignal()
     quantum_requested = pyqtSignal()
     symbolic_requested = pyqtSignal()
 
@@ -115,13 +115,13 @@ class KronosToolBar(QToolBar):
             self.addWidget(btn)
 
     def _add_view_group(self) -> None:
-        simulink = self._make_button("◫", "Switch to Simulink Canvas")
+        aeon = self._make_button("◫", "Switch to Aeon Canvas")
         quantum = self._make_button("⚛", "Switch to Quantum Circuit")
         symbolic = self._make_button("Σ", "Switch to Symbolic Math")
-        simulink.clicked.connect(self.simulink_requested)
+        aeon.clicked.connect(self.aeon_requested)
         quantum.clicked.connect(self.quantum_requested)
         symbolic.clicked.connect(self.symbolic_requested)
-        self.addWidget(simulink)
+        self.addWidget(aeon)
         self.addWidget(quantum)
         self.addWidget(symbolic)
 

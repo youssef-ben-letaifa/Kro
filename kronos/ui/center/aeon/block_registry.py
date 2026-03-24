@@ -1,7 +1,7 @@
-"""Centralized Simulink block registry.
+"""Centralized Aeon block registry.
 
-Every block available in the Kronos Simulink library is defined here
-exactly once.  The ``left_panel``, ``SimulinkLibrary`` tree, canvas
+Every block available in the Kronos Aeon library is defined here
+exactly once.  The ``left_panel``, ``AeonLibrary`` tree, canvas
 drop handler, and ``BlockItem`` all consume this registry so that
 adding a new block only requires editing this file.
 """
@@ -14,7 +14,7 @@ from typing import Any
 
 @dataclass(frozen=True)
 class BlockDef:
-    """Immutable definition of a Simulink block type."""
+    """Immutable definition of an Aeon block type."""
 
     type: str
     category: str
@@ -27,7 +27,7 @@ class BlockDef:
 
 
 # ---------------------------------------------------------------------------
-# Color palette (Simulink-inspired)
+# Color palette (Aeon-inspired)
 # ---------------------------------------------------------------------------
 _SRC   = "#e5a100"   # Sources – orange/yellow
 _SINK  = "#1a4080"   # Sinks – dark blue
@@ -543,12 +543,12 @@ _USER_DEFINED: list[BlockDef] = [
     BlockDef("MATLAB Function",     "User-Defined Functions", _UDEF, 1, 1,
              {"code": "y = u"},
              "Custom MATLAB/Python function", "fcn"),
-    BlockDef("Simulink Function",   "User-Defined Functions", _UDEF, 1, 1,
+    BlockDef("Aeon Function",   "User-Defined Functions", _UDEF, 1, 1,
              {},
-             "Callable Simulink function", "f()"),
+             "Callable Aeon function", "f()"),
     BlockDef("Function Caller",     "User-Defined Functions", _UDEF, 1, 1,
              {"function_name": ""},
-             "Call a Simulink Function", "call"),
+             "Call an Aeon Function", "call"),
     BlockDef("S-Function",          "User-Defined Functions", _UDEF, 1, 1,
              {},
              "Custom C/Python block", "S"),

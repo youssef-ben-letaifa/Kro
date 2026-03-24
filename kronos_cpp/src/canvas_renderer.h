@@ -1,4 +1,4 @@
-// Kronos IDE — Native Simulink canvas renderer
+// Kronos IDE — Native Aeon canvas renderer
 #pragma once
 
 #include <QColor>

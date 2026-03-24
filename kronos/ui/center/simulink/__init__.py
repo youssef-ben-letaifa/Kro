@@ -1,1 +1,0 @@
-"""Simulink canvas package."""

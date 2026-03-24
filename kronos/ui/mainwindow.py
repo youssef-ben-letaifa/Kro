@@ -53,7 +53,7 @@ from kronos.ui.left_panel import LeftPanel
 from kronos.ui.right_panel import RightPanel
 from kronos.ui.ribbon import MatlabRibbon
 from kronos.ui.statusbar import KronosStatusBar
-from kronos.ui.simulink_window import SimulinkWindow
+from kronos.ui.aeon_window import AeonWindow
 from kronos.ui.theme import apply_stylesheet
 
 
@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
         self._selected_figure_var: str | None = None
         self._queued_selection: tuple[int | None, int | None, str | None] | None = None
         self._plot_picker: PlotPickerDialog | None = None
-        self._simulink_window: SimulinkWindow | None = None
+        self._aeon_window: AeonWindow | None = None
 
         self._build_menubar()
         self._build_ribbon()
@@ -278,7 +278,7 @@ class MainWindow(QMainWindow):
         self.ribbon.pid_requested.connect(self._open_pid_tuner)
         self.ribbon.lqr_requested.connect(self._open_lqr_designer)
         self.ribbon.theme_toggle_requested.connect(self._toggle_theme)
-        self.ribbon.simulink_requested.connect(self._open_simulink_window)
+        self.ribbon.aeon_requested.connect(self._open_aeon_window)
         self.ribbon.action_requested.connect(self._on_ribbon_action)
 
         self.menu_run_file.triggered.connect(self._on_run)
@@ -754,21 +754,21 @@ class MainWindow(QMainWindow):
         dlg.code_insert_requested.connect(self.center_panel.insert_snippet)
         dlg.exec()
 
-    def _open_simulink_window(self) -> None:
-        if self._simulink_window is None:
-            self._simulink_window = SimulinkWindow(self)
-            self._simulink_window.simulation_complete.connect(self._on_simulation_complete)
-            self._simulink_window.closed.connect(self._on_simulink_closed)
+    def _open_aeon_window(self) -> None:
+        if self._aeon_window is None:
+            self._aeon_window = AeonWindow(self)
+            self._aeon_window.simulation_complete.connect(self._on_simulation_complete)
+            self._aeon_window.closed.connect(self._on_aeon_closed)
             try:
-                self._simulink_window.setWindowIcon(self.windowIcon())
+                self._aeon_window.setWindowIcon(self.windowIcon())
             except Exception:
                 pass
-        self._simulink_window.show()
-        self._simulink_window.raise_()
-        self._simulink_window.activateWindow()
+        self._aeon_window.show()
+        self._aeon_window.raise_()
+        self._aeon_window.activateWindow()
 
-    def _on_simulink_closed(self) -> None:
-        self._simulink_window = None
+    def _on_aeon_closed(self) -> None:
+        self._aeon_window = None
 
     def _open_preferences(self) -> None:
         from kronos.ui.dialogs.settings_dialog import SettingsDialog
@@ -866,13 +866,13 @@ class MainWindow(QMainWindow):
             )
         except Exception:
             pass
-        # Close Simulink window if open.
-        if self._simulink_window is not None:
+        # Close Aeon window if open.
+        if self._aeon_window is not None:
             try:
-                self._simulink_window.close()
+                self._aeon_window.close()
             except Exception:
                 pass
-            self._simulink_window = None
+            self._aeon_window = None
         # Shutdown the kernel.
         try:
             self.console_panel.shutdown()

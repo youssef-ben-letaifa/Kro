@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtCore import QCoreApplication
-from kronos.ui.center.simulink.simulator import DiagramSimulator
+from kronos.ui.center.aeon.simulator import DiagramSimulator
 
 app = QCoreApplication(sys.argv)
 

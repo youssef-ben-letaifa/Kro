@@ -46,7 +46,7 @@ ICON_FILES: Final[dict[str, str]] = {
     "math_formula": "ic_fluent_math_formula_24_regular.svg",
     "analysis": "ic_fluent_chart_multiple_24_regular.svg",
     "plot": "ic_fluent_line_24_regular.svg",
-    "simulink": "ic_fluent_diagram_24_regular.svg",
+    "aeon": "ic_fluent_diagram_24_regular.svg",
     "apps": "ic_fluent_apps_24_regular.svg",
     "layout": "ic_fluent_grid_24_regular.svg",
     "console": "ic_fluent_prompt_24_regular.svg",
@@ -56,7 +56,7 @@ ICON_FILES: Final[dict[str, str]] = {
     "blocks": "ic_fluent_cube_24_regular.svg",
     "snippets": "ic_fluent_code_24_regular.svg",
     "database": "ic_fluent_database_24_regular.svg",
-    # Simulink window extras
+    # Aeon window extras
     "library": "ic_fluent_library_24_regular.svg",
     "log": "ic_fluent_list_24_regular.svg",
     "viewer": "ic_fluent_eye_24_regular.svg",

@@ -40,7 +40,7 @@ packages = [
   "kronos",
   "kronos.ui",
   "kronos.ui.center",
-  "kronos.ui.center.simulink",
+  "kronos.ui.center.aeon",
   "kronos.ui.bottom",
   "kronos.ui.dialogs",
   "kronos.ui.theme",

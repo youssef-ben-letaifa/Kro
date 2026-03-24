@@ -1,4 +1,4 @@
-"""Graphics item representing a Simulink block."""
+"""Graphics item representing a Aeon block."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from PyQt6.QtCore import QPointF, QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PyQt6.QtWidgets import QGraphicsObject, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem
 
-from kronos.ui.center.simulink.block_registry import get_block_def, resolve_type
+from kronos.ui.center.aeon.block_registry import get_block_def, resolve_type
 
 
 class BlockItem(QGraphicsObject):
-    """Visual block on the Simulink canvas with improved port rendering."""
+    """Visual block on the Aeon canvas with improved port rendering."""
 
     position_changed = pyqtSignal(str)
     block_double_clicked = pyqtSignal(str, dict)

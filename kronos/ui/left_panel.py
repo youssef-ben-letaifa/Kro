@@ -314,7 +314,7 @@ class LeftPanel(QWidget):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
-        layout.addWidget(self._header("SIMULINK BLOCKS"))
+        layout.addWidget(self._header("AEON BLOCKS"))
         layout.addWidget(self.blocks_tree, 1)
         return page
 
@@ -334,7 +334,7 @@ class LeftPanel(QWidget):
         return label
 
     def _build_blocks(self) -> None:
-        from kronos.ui.center.simulink.block_registry import ALL_CATEGORIES
+        from kronos.ui.center.aeon.block_registry import ALL_CATEGORIES
 
         for category, blocks in ALL_CATEGORIES:
             parent = QTreeWidgetItem([category])

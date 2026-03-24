@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
-from kronos.ui.center.simulink.block_registry import get_block_def, resolve_type
+from kronos.ui.center.aeon.block_registry import get_block_def, resolve_type
 
 
 class BlockParamDialog(QDialog):

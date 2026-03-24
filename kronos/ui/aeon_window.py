@@ -1,10 +1,10 @@
-"""Standalone Simulink-style window for Kronos – MATLAB 2025 UI."""
+"""Standalone Aeon-style window for Kronos – MATLAB 2025 UI."""
 
 from __future__ import annotations
 
 import json
-from PyQt6.QtCore import QObject, QPointF, QRectF, QSize, Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QPixmap
+from PyQt6.QtCore import QMimeData, QObject, QPointF, QRectF, QSize, Qt, QThread, pyqtSignal
+from PyQt6.QtGui import QDrag, QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -27,17 +27,15 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from PyQt6.QtGui import QColor, QDrag, QFont, QIcon, QPainter, QPainterPath, QPen, QPixmap
-from PyQt6.QtCore import QMimeData
 
-from kronos.ui.center.simulink.block_param_dialog import BlockParamDialog
-from kronos.ui.center.simulink.block_registry import (
+from kronos.ui.center.aeon.block_param_dialog import BlockParamDialog
+from kronos.ui.center.aeon.block_registry import (
     ALL_CATEGORIES,
     BlockDef,
     get_block_def,
 )
-from kronos.ui.center.simulink.canvas import SimulinkCanvas
-from kronos.ui.center.simulink.simulator import DiagramSimulator
+from kronos.ui.center.aeon.canvas import AeonCanvas
+from kronos.ui.center.aeon.simulator import DiagramSimulator
 from kronos.ui.left_panel import BlockTreeWidget
 from kronos.ui.theme.design_tokens import COLORS
 from kronos.ui.theme.fluent_icons import icon_for
@@ -73,7 +71,7 @@ class _RibbonGroup(QFrame):
 
 
 def _sim_icon(name: str, color: str | None = None) -> QIcon:
-    """Create a Fluent icon for the Simulink ribbon."""
+    """Create a Fluent icon for the Aeon ribbon."""
     tint = color or COLORS["text_primary"]
     return icon_for(name, size=22, color=tint)
 
@@ -251,8 +249,8 @@ def _draw_port_triangle(p: QPainter, x: float, y: float, kind: str) -> None:
     p.drawPath(path)
 
 
-class SimulinkLibrary(QWidget):
-    """Two-pane library browser matching MATLAB Simulink Library Browser."""
+class AeonLibrary(QWidget):
+    """Two-pane library browser matching MATLAB Aeon Library Browser."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -268,7 +266,7 @@ class SimulinkLibrary(QWidget):
         )
         tb_layout = QHBoxLayout(title_bar)
         tb_layout.setContentsMargins(6, 4, 6, 4)
-        title_lbl = QLabel("Simulink Library Browser")
+        title_lbl = QLabel("Aeon Library Browser")
         title_lbl.setStyleSheet("color: #c8ccd4; font-weight: bold; font-size: 11px;")
         tb_layout.addWidget(title_lbl)
         tb_layout.addStretch(1)
@@ -415,27 +413,27 @@ def _block_tree_icon(bdef: BlockDef) -> QIcon:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Main Simulink Window
+# Main Aeon Window
 # ═══════════════════════════════════════════════════════════════════════════
 
-class SimulinkWindow(QMainWindow):
-    """Independent Simulink-style window with MATLAB-style ribbon."""
+class AeonWindow(QMainWindow):
+    """Independent Aeon-style window with MATLAB-style ribbon."""
 
     simulation_complete = pyqtSignal(dict)
     closed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Simulink — Kronos 2026.1")
+        self.setWindowTitle("Aeon — Kronos 2026.1")
         self.setMinimumSize(1200, 720)
 
         self._simulator = DiagramSimulator()
         self._sim_thread: QThread | None = None
 
-        self.simulink_canvas = SimulinkCanvas()
-        self.simulink_canvas.load_demo_diagram()
+        self.aeon_canvas = AeonCanvas()
+        self.aeon_canvas.load_demo_diagram()
 
-        self._library = SimulinkLibrary()
+        self._library = AeonLibrary()
 
         self._build_ui()
         self._connect_signals()
@@ -470,7 +468,7 @@ class SimulinkWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setChildrenCollapsible(False)
         splitter.addWidget(self._library)
-        splitter.addWidget(self.simulink_canvas)
+        splitter.addWidget(self.aeon_canvas)
         splitter.setSizes([280, 920])
         layout.addWidget(splitter, 1)
 
@@ -695,16 +693,16 @@ class SimulinkWindow(QMainWindow):
         self._stop_btn.clicked.connect(self._stop_simulation)
         self._validate_btn.clicked.connect(self._validate_diagram)
         self._arrange_btn.clicked.connect(self._auto_arrange)
-        self._clear_btn.clicked.connect(self.simulink_canvas.clear_canvas)
+        self._clear_btn.clicked.connect(self.aeon_canvas.clear_canvas)
         self._save_btn.clicked.connect(self._save_diagram)
         self._open_btn.clicked.connect(self._load_diagram)
         self._fit_btn.clicked.connect(self._fit_view)
-        self._connect_mode.toggled.connect(self.simulink_canvas.set_connect_mode)
-        self._snap_mode.toggled.connect(self.simulink_canvas.set_snap_to_grid)
-        self.simulink_canvas.diagram_changed.connect(
+        self._connect_mode.toggled.connect(self.aeon_canvas.set_connect_mode)
+        self._snap_mode.toggled.connect(self.aeon_canvas.set_snap_to_grid)
+        self.aeon_canvas.diagram_changed.connect(
             lambda: self._status.setText("Modified")
         )
-        self.simulink_canvas.block_double_clicked.connect(
+        self.aeon_canvas.block_double_clicked.connect(
             self._on_block_double_clicked
         )
 
@@ -716,7 +714,7 @@ class SimulinkWindow(QMainWindow):
         if self._sim_thread is not None and self._sim_thread.isRunning():
             self._status.setText("Simulation already running")
             return
-        issues = self.simulink_canvas.validate_diagram()
+        issues = self.aeon_canvas.validate_diagram()
         if issues:
             preview = "\n".join(f"• {issue}" for issue in issues[:6])
             if len(issues) > 6:
@@ -730,12 +728,12 @@ class SimulinkWindow(QMainWindow):
             if answer != QMessageBox.StandardButton.Yes:
                 self._status.setText("Validation failed")
                 return
-        diagram = self.simulink_canvas.get_diagram()
+        diagram = self.aeon_canvas.get_diagram()
         t_end = float(self._t_end_spin.value())
         dt = float(self._dt_spin.value())
         self._status.setText("Running simulation…")
-        self.simulink_canvas.set_wire_animation(True)
-        self.simulink_canvas.set_runtime_status(0.0, 0, 0)
+        self.aeon_canvas.set_wire_animation(True)
+        self.aeon_canvas.set_runtime_status(0.0, 0, 0)
 
         worker = _SimulationWorker(self._simulator, diagram, t_end, dt)
         thread = QThread(self)
@@ -758,7 +756,7 @@ class SimulinkWindow(QMainWindow):
         if self._sim_thread is not None and self._sim_thread.isRunning():
             self._sim_thread.requestInterruption()
             self._status.setText("Stop requested")
-            self.simulink_canvas.set_wire_animation(False)
+            self.aeon_canvas.set_wire_animation(False)
 
     # ---------------------------------------------------------------
     # File I/O
@@ -766,11 +764,11 @@ class SimulinkWindow(QMainWindow):
 
     def _save_diagram(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Diagram", "", "Simulink Files (*.sim)"
+            self, "Save Diagram", "", "Aeon Files (*.sim)"
         )
         if not path:
             return
-        data = self.simulink_canvas.get_diagram()
+        data = self.aeon_canvas.get_diagram()
         try:
             with open(path, "w", encoding="utf-8") as handle:
                 json.dump(data, handle, indent=2)
@@ -782,14 +780,14 @@ class SimulinkWindow(QMainWindow):
 
     def _load_diagram(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load Diagram", "", "Simulink Files (*.sim)"
+            self, "Load Diagram", "", "Aeon Files (*.sim)"
         )
         if not path:
             return
         try:
             with open(path, "r", encoding="utf-8") as handle:
                 data = json.load(handle)
-            self.simulink_canvas.load_diagram(data)
+            self.aeon_canvas.load_diagram(data)
             self._model_name.setText(path.rsplit("/", 1)[-1].replace(".sim", ""))
             self._status.setText("Loaded")
         except (OSError, json.JSONDecodeError) as exc:
@@ -800,7 +798,7 @@ class SimulinkWindow(QMainWindow):
     # ---------------------------------------------------------------
 
     def _validate_diagram(self) -> None:
-        issues = self.simulink_canvas.validate_diagram()
+        issues = self.aeon_canvas.validate_diagram()
         if not issues:
             self._status.setText("Model valid ✓")
             QMessageBox.information(self, "Validation", "No issues found.")
@@ -809,28 +807,28 @@ class SimulinkWindow(QMainWindow):
         QMessageBox.warning(self, "Validation issues", "\n".join(issues))
 
     def _auto_arrange(self) -> None:
-        self.simulink_canvas.auto_arrange_left_to_right()
+        self.aeon_canvas.auto_arrange_left_to_right()
         self._status.setText("Auto-arranged")
 
     def _fit_view(self) -> None:
-        items_rect = self.simulink_canvas.scene().itemsBoundingRect()
+        items_rect = self.aeon_canvas.scene().itemsBoundingRect()
         if not items_rect.isNull():
-            self.simulink_canvas.fitInView(
+            self.aeon_canvas.fitInView(
                 items_rect.adjusted(-40, -40, 40, 40),
                 Qt.AspectRatioMode.KeepAspectRatio,
             )
         else:
-            self.simulink_canvas.fitInView(
-                self.simulink_canvas.sceneRect(),
+            self.aeon_canvas.fitInView(
+                self.aeon_canvas.sceneRect(),
                 Qt.AspectRatioMode.KeepAspectRatio,
             )
 
     def _on_simulation_result(self, result: dict) -> None:
-        self.simulink_canvas.set_wire_animation(False)
+        self.aeon_canvas.set_wire_animation(False)
         if result.get("success"):
             self._status.setText("Simulation complete ✓")
             sim_time = float(result.get("time", [0.0])[-1]) if result.get("time") else 0.0
-            self.simulink_canvas.set_runtime_status(
+            self.aeon_canvas.set_runtime_status(
                 sim_time=sim_time,
                 step_count=max(0, len(result.get("time", [])) - 1),
                 error_count=0,
@@ -874,26 +872,26 @@ class SimulinkWindow(QMainWindow):
             self.simulation_complete.emit(result)
         else:
             self._status.setText("Simulation failed")
-            self.simulink_canvas.set_runtime_status(0.0, 0, 1)
+            self.aeon_canvas.set_runtime_status(0.0, 0, 1)
             QMessageBox.warning(
                 self, "Simulation Error", result.get("error", "Unknown error")
             )
 
     def _on_simulation_error(self, error: str) -> None:
         self._status.setText("Simulation error")
-        self.simulink_canvas.set_wire_animation(False)
-        self.simulink_canvas.set_runtime_status(0.0, 0, 1)
+        self.aeon_canvas.set_wire_animation(False)
+        self.aeon_canvas.set_runtime_status(0.0, 0, 1)
         QMessageBox.warning(self, "Simulation Error", error)
 
     def _on_block_double_clicked(self, block_id: str, params: dict) -> None:
-        block = self.simulink_canvas._blocks.get(block_id)
+        block = self.aeon_canvas._blocks.get(block_id)
         if block is None:
             return
         dlg = BlockParamDialog(block.block_type, params, self)
         if dlg.exec() == dlg.DialogCode.Accepted:
             block.params = dlg.get_params()
             block.update()
-            self.simulink_canvas.diagram_changed.emit()
+            self.aeon_canvas.diagram_changed.emit()
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
         self.closed.emit()

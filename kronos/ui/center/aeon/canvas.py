@@ -1,4 +1,4 @@
-"""Simulink canvas implementation."""
+"""Aeon canvas implementation."""
 
 from __future__ import annotations
 
@@ -20,13 +20,13 @@ from PyQt6.QtWidgets import (
 )
 
 from kronos.native import CanvasRenderer, native_available
-from kronos.ui.center.simulink.block_item import BlockItem
-from kronos.ui.center.simulink.block_param_dialog import BlockParamDialog
-from kronos.ui.center.simulink.block_registry import SOURCE_TYPES, SINK_TYPES
-from kronos.ui.center.simulink.wire_item import WireItem
+from kronos.ui.center.aeon.block_item import BlockItem
+from kronos.ui.center.aeon.block_param_dialog import BlockParamDialog
+from kronos.ui.center.aeon.block_registry import SOURCE_TYPES, SINK_TYPES
+from kronos.ui.center.aeon.wire_item import WireItem
 
 
-class SimulinkCanvas(QGraphicsView):
+class AeonCanvas(QGraphicsView):
     """Canvas for block diagram editing."""
 
     block_double_clicked = pyqtSignal(str, dict)
