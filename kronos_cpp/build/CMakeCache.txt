@@ -1400,6 +1400,8 @@ _Python3_INCLUDE_DIR:INTERNAL=/home/youssef-ben-letaifa/.local/share/uv/python/c
 //Python3 Properties
 _Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;11;15;64;<none>;cpython-311-x86_64-linux-gnu;abi3;/home/youssef-ben-letaifa/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11;/home/youssef-ben-letaifa/Desktop/Kro/.venv/lib/python3.11;/home/youssef-ben-letaifa/Desktop/Kro/.venv/lib/python3.11/site-packages;/home/youssef-ben-letaifa/Desktop/Kro/.venv/lib/python3.11/site-packages
 _Python3_INTERPRETER_SIGNATURE:INTERNAL=a05c77a7f515466072273b626d113338
+//Interpreter reason failure
+_Python3_Interpreter_REASON_FAILURE:INTERNAL=
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 __pkg_config_arguments_PKG_XKB:INTERNAL=QUIET;xkbcommon

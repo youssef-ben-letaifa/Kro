@@ -45,6 +45,7 @@ from kronos.engine.kernel_bridge import KernelBridge
 from kronos.engine.kernel_message_router import KernelMessageRouter
 from kronos.engine import plot_manager
 from kronos.engine.settings_manager import SettingsManager
+from kronos.toolboxes import list_available_toolboxes, load_toolbox
 from kronos.engine.workspace_manager import WorkspaceManager
 from kronos.ui.bottom.console_panel import ConsolePanel
 from kronos.ui.bottom.figure_panel import FigurePanel
@@ -99,6 +100,51 @@ class PlotPickerDialog(QDialog):
             self._selection_callback(fig_num, axes_index, var_name)
 
 
+class ToolboxPickerDialog(QDialog):
+    """Dialog to choose and open installed Kronos toolboxes."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Toolboxes")
+        self.setMinimumWidth(420)
+        self.setMinimumHeight(320)
+
+        layout = QVBoxLayout(self)
+        self._list = QListWidget()
+        self._list.itemDoubleClicked.connect(lambda *_: self._accept_selection())
+
+        button_row = QWidget()
+        button_layout = QVBoxLayout(button_row)
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        open_btn = QPushButton("Open")
+        close_btn = QPushButton("Close")
+        open_btn.clicked.connect(self._accept_selection)
+        close_btn.clicked.connect(self.reject)
+        button_layout.addWidget(open_btn)
+        button_layout.addWidget(close_btn)
+
+        layout.addWidget(self._list, 1)
+        layout.addWidget(button_row)
+
+    def set_toolboxes(self, names: list[str]) -> None:
+        self._list.clear()
+        for name in names:
+            self._list.addItem(name)
+        if names:
+            self._list.setCurrentRow(0)
+
+    def selected_toolbox(self) -> str | None:
+        item = self._list.currentItem()
+        if item is None:
+            return None
+        return item.text()
+
+    def _accept_selection(self) -> None:
+        if self.selected_toolbox() is None:
+            return
+        self.accept()
+
+
 class MainWindow(QMainWindow):
     """Main window for the Kronos IDE."""
 
@@ -141,6 +187,8 @@ class MainWindow(QMainWindow):
         self._queued_selection: tuple[int | None, int | None, str | None] | None = None
         self._plot_picker: PlotPickerDialog | None = None
         self._aeon_window: AeonWindow | None = None
+        self._toolbox_picker: ToolboxPickerDialog | None = None
+        self._toolbox_windows: dict[str, QWidget] = {}
 
         self._build_menubar()
         self._build_ribbon()
@@ -166,6 +214,12 @@ class MainWindow(QMainWindow):
             self.left_panel.set_theme(is_dark)
         if self._aeon_window is not None:
             self._aeon_window.set_theme(self._current_theme)
+        for window in list(self._toolbox_windows.values()):
+            if hasattr(window, "set_theme"):
+                try:
+                    window.set_theme(self._current_theme)
+                except Exception:
+                    continue
 
     def _center_on_screen(self) -> None:
         screen = QApplication.primaryScreen()
@@ -701,6 +755,7 @@ class MainWindow(QMainWindow):
             "run_time":         (lambda: (self._on_run(), self.status.showMessage("Running with timing (basic)", 2000)),),
             "run_section":      (lambda: self._on_run(),),
             "preferences":      (lambda: self._open_preferences(),),
+            "toolboxes":        (lambda: self._open_toolbox_picker(),),
             "find_files":       (lambda: self.left_panel.show_files_section(),),
             "about":            (lambda: self._open_about(),),
         }
@@ -772,6 +827,78 @@ class MainWindow(QMainWindow):
 
     def _on_aeon_closed(self) -> None:
         self._aeon_window = None
+
+    def _open_toolbox_picker(self) -> None:
+        names = list_available_toolboxes()
+        if not names:
+            QMessageBox.information(self, "Toolboxes", "No toolboxes are currently installed.")
+            return
+        if self._toolbox_picker is None:
+            self._toolbox_picker = ToolboxPickerDialog(self)
+        self._toolbox_picker.set_toolboxes(names)
+        if self._toolbox_picker.exec() != QDialog.DialogCode.Accepted:
+            return
+        name = self._toolbox_picker.selected_toolbox()
+        if name:
+            self._open_toolbox(name)
+
+    def _open_toolbox(self, name: str) -> None:
+        existing = self._toolbox_windows.get(name)
+        if existing is not None:
+            try:
+                existing.show()
+                existing.raise_()
+                existing.activateWindow()
+                self.status.showMessage(f"{name} already open", 1800)
+                return
+            except RuntimeError:
+                self._toolbox_windows.pop(name, None)
+
+        try:
+            module = load_toolbox(name)
+        except Exception as exc:
+            QMessageBox.warning(self, "Toolbox Load Error", f"Failed to load '{name}':\n{exc}")
+            return
+
+        window_class = getattr(module, "AutonomousDrivingToolboxWindow", None)
+        if window_class is None:
+            QMessageBox.warning(
+                self,
+                "Toolbox Error",
+                f"Toolbox '{name}' does not expose AutonomousDrivingToolboxWindow.",
+            )
+            return
+
+        try:
+            window = window_class(self)
+        except Exception as exc:
+            QMessageBox.warning(self, "Toolbox Error", f"Failed to open '{name}':\n{exc}")
+            return
+
+        self._toolbox_windows[name] = window
+        if hasattr(window, "closed"):
+            try:
+                window.closed.connect(lambda n=name: self._on_toolbox_closed(n))
+            except Exception:
+                pass
+        window.destroyed.connect(lambda *_args, n=name: self._on_toolbox_closed(n))
+
+        if hasattr(window, "set_theme"):
+            try:
+                window.set_theme(self._current_theme)
+            except Exception:
+                pass
+        try:
+            window.setWindowIcon(self.windowIcon())
+        except Exception:
+            pass
+        window.show()
+        window.raise_()
+        window.activateWindow()
+        self.status.showMessage(f"Opened {name}", 2000)
+
+    def _on_toolbox_closed(self, name: str) -> None:
+        self._toolbox_windows.pop(name, None)
 
     def _open_preferences(self) -> None:
         from kronos.ui.dialogs.settings_dialog import SettingsDialog
@@ -876,6 +1003,12 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
             self._aeon_window = None
+        for name, window in list(self._toolbox_windows.items()):
+            try:
+                window.close()
+            except Exception:
+                pass
+            self._toolbox_windows.pop(name, None)
         # Shutdown the kernel.
         try:
             self.console_panel.shutdown()

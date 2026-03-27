@@ -27,10 +27,21 @@ pybind11_add_module(kronos_native MODULE
     src/syntax_highlighter.cpp
     src/waveform_renderer.cpp
     src/canvas_renderer.cpp
+    src/vehicle_physics.cpp
+)
+
+pybind11_add_module(kronos_physics MODULE
+    src/vehicle_physics_bindings.cpp
+    src/vehicle_physics.cpp
 )
 
 # Keep warnings strict for native code quality.
 target_compile_options(kronos_native PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+)
+target_compile_options(kronos_physics PRIVATE
     -Wall
     -Wextra
     -Wpedantic
@@ -49,6 +60,11 @@ target_link_libraries(kronos_native PRIVATE
 )
 
 set_target_properties(kronos_native PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../kronos/native
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../kronos/native
+)
+
+set_target_properties(kronos_physics PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../kronos/native
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../kronos/native
 )

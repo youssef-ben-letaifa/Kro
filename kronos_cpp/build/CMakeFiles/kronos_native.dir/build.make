@@ -148,13 +148,28 @@ CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.s"
 	/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/canvas_renderer.cpp -o CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.s
 
+CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o: CMakeFiles/kronos_native.dir/flags.make
+CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o: /home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/vehicle_physics.cpp
+CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o: CMakeFiles/kronos_native.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o"
+	/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o -MF CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o.d -o CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o -c /home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/vehicle_physics.cpp
+
+CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.i"
+	/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/vehicle_physics.cpp > CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.i
+
+CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.s"
+	/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/vehicle_physics.cpp -o CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.s
+
 # Object files for target kronos_native
 kronos_native_OBJECTS = \
 "CMakeFiles/kronos_native.dir/kronos_native_autogen/mocs_compilation.cpp.o" \
 "CMakeFiles/kronos_native.dir/bindings.cpp.o" \
 "CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o" \
 "CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o" \
-"CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o"
+"CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o" \
+"CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o"
 
 # External object files for target kronos_native
 kronos_native_EXTERNAL_OBJECTS =
@@ -164,6 +179,7 @@ kronos_native_EXTERNAL_OBJECTS =
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o
+/home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: CMakeFiles/kronos_native.dir/build.make
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: CMakeFiles/kronos_native.dir/compiler_depend.ts
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: /usr/lib/x86_64-linux-gnu/libQt6OpenGLWidgets.so.6.8.2
@@ -174,7 +190,7 @@ kronos_native_EXTERNAL_OBJECTS =
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: /usr/lib/x86_64-linux-gnu/libOpenGL.so
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: /usr/lib/x86_64-linux-gnu/libQt6Core.so.6.8.2
 /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so: CMakeFiles/kronos_native.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX shared module /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX shared module /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/kronos_native.dir/link.txt --verbose=$(VERBOSE)
 	/bin/strip /home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so
 

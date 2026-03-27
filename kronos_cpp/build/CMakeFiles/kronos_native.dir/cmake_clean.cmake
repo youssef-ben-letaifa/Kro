@@ -13,6 +13,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o.d"
   "CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o"
   "CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o.d"
+  "CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o"
+  "CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o.d"
   "CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o"
   "CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o.d"
   "kronos_native_autogen/mocs_compilation.cpp"

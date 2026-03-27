@@ -208,6 +208,9 @@ class MatlabRibbon(QWidget):
 
         environment = _RibbonGroup("ENVIRONMENT")
         environment.add_button(
+            self._action_button("ToolBox", "Toolbox browser", "toolbox", action_id="toolboxes")
+        )
+        environment.add_button(
             self._action_button("Prefs", "Preferences", "settings", action_id="preferences")
         )
         environment.add_button(

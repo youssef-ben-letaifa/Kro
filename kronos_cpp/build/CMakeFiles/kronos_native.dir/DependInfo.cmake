@@ -13,6 +13,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/build/kronos_native_autogen/mocs_compilation.cpp" "CMakeFiles/kronos_native.dir/kronos_native_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/kronos_native.dir/kronos_native_autogen/mocs_compilation.cpp.o.d"
   "/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/canvas_renderer.cpp" "CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o" "gcc" "CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o.d"
   "/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/syntax_highlighter.cpp" "CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o" "gcc" "CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o.d"
+  "/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/vehicle_physics.cpp" "CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o" "gcc" "CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o.d"
   "/home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/waveform_renderer.cpp" "CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o" "gcc" "CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o.d"
   "" "/home/youssef-ben-letaifa/Desktop/Kro/kronos/native/kronos_native.cpython-311-x86_64-linux-gnu.so" "gcc" "CMakeFiles/kronos_native.dir/link.d"
   )

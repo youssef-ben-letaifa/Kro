@@ -624,6 +624,7 @@ CMakeFiles/kronos_native.dir/bindings.cpp.o: \
  /usr/include/x86_64-linux-gnu/qt6/QtGui/qtextdocument.h \
  /usr/include/x86_64-linux-gnu/qt6/QtGui/QTextCharFormat \
  /usr/include/x86_64-linux-gnu/qt6/QtGui/qtextformat.h \
+ /home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/vehicle_physics.h \
  /home/youssef-ben-letaifa/Desktop/Kro/kronos_cpp/src/waveform_renderer.h \
  /usr/include/x86_64-linux-gnu/qt6/QtOpenGLWidgets/QOpenGLWidget \
  /usr/include/x86_64-linux-gnu/qt6/QtOpenGLWidgets/qopenglwidget.h \

@@ -6,6 +6,7 @@
   CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o \
   CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o \
   CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o \
+  CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o \
   /usr/lib/x86_64-linux-gnu/libQt6OpenGLWidgets.so.6.8.2 \
   /usr/lib/x86_64-linux-gnu/libQt6Widgets.so.6.8.2 \
   /usr/lib/x86_64-linux-gnu/libQt6OpenGL.so.6.8.2 \
@@ -51,6 +52,8 @@ CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.o:
 CMakeFiles/kronos_native.dir/src/waveform_renderer.cpp.o:
 
 CMakeFiles/kronos_native.dir/src/canvas_renderer.cpp.o:
+
+CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o:
 
 /usr/lib/x86_64-linux-gnu/libQt6OpenGLWidgets.so.6.8.2:
 

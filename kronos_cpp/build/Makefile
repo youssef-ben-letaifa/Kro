@@ -130,6 +130,19 @@ kronos_native/fast:
 .PHONY : kronos_native/fast
 
 #=============================================================================
+# Target rules for targets named kronos_physics
+
+# Build rule for target.
+kronos_physics: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kronos_physics
+.PHONY : kronos_physics
+
+# fast build rule for target.
+kronos_physics/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/build
+.PHONY : kronos_physics/fast
+
+#=============================================================================
 # Target rules for targets named kronos_native_autogen_timestamp_deps
 
 # Build rule for target.
@@ -154,6 +167,32 @@ kronos_native_autogen: cmake_check_build_system
 kronos_native_autogen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_native_autogen.dir/build.make CMakeFiles/kronos_native_autogen.dir/build
 .PHONY : kronos_native_autogen/fast
+
+#=============================================================================
+# Target rules for targets named kronos_physics_autogen_timestamp_deps
+
+# Build rule for target.
+kronos_physics_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kronos_physics_autogen_timestamp_deps
+.PHONY : kronos_physics_autogen_timestamp_deps
+
+# fast build rule for target.
+kronos_physics_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics_autogen_timestamp_deps.dir/build.make CMakeFiles/kronos_physics_autogen_timestamp_deps.dir/build
+.PHONY : kronos_physics_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named kronos_physics_autogen
+
+# Build rule for target.
+kronos_physics_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kronos_physics_autogen
+.PHONY : kronos_physics_autogen
+
+# fast build rule for target.
+kronos_physics_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics_autogen.dir/build.make CMakeFiles/kronos_physics_autogen.dir/build
+.PHONY : kronos_physics_autogen/fast
 
 bindings.o: bindings.cpp.o
 .PHONY : bindings.o
@@ -203,6 +242,30 @@ kronos_native_autogen/mocs_compilation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_native.dir/build.make CMakeFiles/kronos_native.dir/kronos_native_autogen/mocs_compilation.cpp.s
 .PHONY : kronos_native_autogen/mocs_compilation.cpp.s
 
+kronos_physics_autogen/mocs_compilation.o: kronos_physics_autogen/mocs_compilation.cpp.o
+.PHONY : kronos_physics_autogen/mocs_compilation.o
+
+# target to build an object file
+kronos_physics_autogen/mocs_compilation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/kronos_physics_autogen/mocs_compilation.cpp.o
+.PHONY : kronos_physics_autogen/mocs_compilation.cpp.o
+
+kronos_physics_autogen/mocs_compilation.i: kronos_physics_autogen/mocs_compilation.cpp.i
+.PHONY : kronos_physics_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+kronos_physics_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/kronos_physics_autogen/mocs_compilation.cpp.i
+.PHONY : kronos_physics_autogen/mocs_compilation.cpp.i
+
+kronos_physics_autogen/mocs_compilation.s: kronos_physics_autogen/mocs_compilation.cpp.s
+.PHONY : kronos_physics_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+kronos_physics_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/kronos_physics_autogen/mocs_compilation.cpp.s
+.PHONY : kronos_physics_autogen/mocs_compilation.cpp.s
+
 src/canvas_renderer.o: src/canvas_renderer.cpp.o
 .PHONY : src/canvas_renderer.o
 
@@ -251,6 +314,57 @@ src/syntax_highlighter.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_native.dir/build.make CMakeFiles/kronos_native.dir/src/syntax_highlighter.cpp.s
 .PHONY : src/syntax_highlighter.cpp.s
 
+src/vehicle_physics.o: src/vehicle_physics.cpp.o
+.PHONY : src/vehicle_physics.o
+
+# target to build an object file
+src/vehicle_physics.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_native.dir/build.make CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/src/vehicle_physics.cpp.o
+.PHONY : src/vehicle_physics.cpp.o
+
+src/vehicle_physics.i: src/vehicle_physics.cpp.i
+.PHONY : src/vehicle_physics.i
+
+# target to preprocess a source file
+src/vehicle_physics.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_native.dir/build.make CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/src/vehicle_physics.cpp.i
+.PHONY : src/vehicle_physics.cpp.i
+
+src/vehicle_physics.s: src/vehicle_physics.cpp.s
+.PHONY : src/vehicle_physics.s
+
+# target to generate assembly for a file
+src/vehicle_physics.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_native.dir/build.make CMakeFiles/kronos_native.dir/src/vehicle_physics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/src/vehicle_physics.cpp.s
+.PHONY : src/vehicle_physics.cpp.s
+
+src/vehicle_physics_bindings.o: src/vehicle_physics_bindings.cpp.o
+.PHONY : src/vehicle_physics_bindings.o
+
+# target to build an object file
+src/vehicle_physics_bindings.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/src/vehicle_physics_bindings.cpp.o
+.PHONY : src/vehicle_physics_bindings.cpp.o
+
+src/vehicle_physics_bindings.i: src/vehicle_physics_bindings.cpp.i
+.PHONY : src/vehicle_physics_bindings.i
+
+# target to preprocess a source file
+src/vehicle_physics_bindings.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/src/vehicle_physics_bindings.cpp.i
+.PHONY : src/vehicle_physics_bindings.cpp.i
+
+src/vehicle_physics_bindings.s: src/vehicle_physics_bindings.cpp.s
+.PHONY : src/vehicle_physics_bindings.s
+
+# target to generate assembly for a file
+src/vehicle_physics_bindings.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kronos_physics.dir/build.make CMakeFiles/kronos_physics.dir/src/vehicle_physics_bindings.cpp.s
+.PHONY : src/vehicle_physics_bindings.cpp.s
+
 src/waveform_renderer.o: src/waveform_renderer.cpp.o
 .PHONY : src/waveform_renderer.o
 
@@ -285,19 +399,31 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... kronos_native_autogen"
 	@echo "... kronos_native_autogen_timestamp_deps"
+	@echo "... kronos_physics_autogen"
+	@echo "... kronos_physics_autogen_timestamp_deps"
 	@echo "... kronos_native"
+	@echo "... kronos_physics"
 	@echo "... bindings.o"
 	@echo "... bindings.i"
 	@echo "... bindings.s"
 	@echo "... kronos_native_autogen/mocs_compilation.o"
 	@echo "... kronos_native_autogen/mocs_compilation.i"
 	@echo "... kronos_native_autogen/mocs_compilation.s"
+	@echo "... kronos_physics_autogen/mocs_compilation.o"
+	@echo "... kronos_physics_autogen/mocs_compilation.i"
+	@echo "... kronos_physics_autogen/mocs_compilation.s"
 	@echo "... src/canvas_renderer.o"
 	@echo "... src/canvas_renderer.i"
 	@echo "... src/canvas_renderer.s"
 	@echo "... src/syntax_highlighter.o"
 	@echo "... src/syntax_highlighter.i"
 	@echo "... src/syntax_highlighter.s"
+	@echo "... src/vehicle_physics.o"
+	@echo "... src/vehicle_physics.i"
+	@echo "... src/vehicle_physics.s"
+	@echo "... src/vehicle_physics_bindings.o"
+	@echo "... src/vehicle_physics_bindings.i"
+	@echo "... src/vehicle_physics_bindings.s"
 	@echo "... src/waveform_renderer.o"
 	@echo "... src/waveform_renderer.i"
 	@echo "... src/waveform_renderer.s"

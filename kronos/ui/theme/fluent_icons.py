@@ -30,6 +30,7 @@ ICON_FILES: Final[dict[str, str]] = {
     "run": "ic_fluent_play_24_regular.svg",
     "stop": "ic_fluent_stop_24_regular.svg",
     "restart": "ic_fluent_arrow_clockwise_24_regular.svg",
+    "reset": "ic_fluent_arrow_clockwise_24_regular.svg",
     "run_time": "ic_fluent_timer_24_regular.svg",
     "run_section": "ic_fluent_play_circle_24_regular.svg",
     "clear": "ic_fluent_eraser_24_regular.svg",
@@ -48,6 +49,7 @@ ICON_FILES: Final[dict[str, str]] = {
     "plot": "ic_fluent_line_24_regular.svg",
     "aeon": "ic_fluent_diagram_24_regular.svg",
     "apps": "ic_fluent_apps_24_regular.svg",
+    "toolbox": "ic_fluent_library_24_regular.svg",
     "layout": "ic_fluent_grid_24_regular.svg",
     "console": "ic_fluent_prompt_24_regular.svg",
     # Left navigation
