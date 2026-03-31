@@ -1,4 +1,6 @@
-#!/home/youssef-ben-letaifa/Desktop/Kro/.venv/bin/python3.11
+#!/bin/sh
+'''exec' "/home/youssef-ben-letaifa/Desktop/Kronos Project/Kro/.venv/bin/python" "$0" "$@"
+' '''
 import sys
 from fontTools.merge import main
 if __name__ == '__main__':

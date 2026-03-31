@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV=/home/youssef-ben-letaifa/Desktop/Kro/.venv
+VIRTUAL_ENV='/home/youssef-ben-letaifa/Desktop/Kronos Project/Kro/.venv'
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
