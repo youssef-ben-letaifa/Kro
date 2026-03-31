@@ -26,14 +26,17 @@ def main() -> None:
     base_dir = Path(__file__).parent.parent
     icon = QIcon()
     icon_small = base_dir / "icon.ico"
-    icon_large = base_dir / "bigIcon.ico"
-    icon_large_alt = base_dir / "BigIcon.ico"
+    icon_large = base_dir / "iconK.ico"
+    icon_legacy = base_dir / "bigIcon.ico"
+    icon_legacy_alt = base_dir / "BigIcon.ico"
     if icon_small.exists():
         icon.addFile(str(icon_small))
     if icon_large.exists():
         icon.addFile(str(icon_large))
-    if icon_large_alt.exists():
-        icon.addFile(str(icon_large_alt))
+    if icon_legacy.exists():
+        icon.addFile(str(icon_legacy))
+    if icon_legacy_alt.exists():
+        icon.addFile(str(icon_legacy_alt))
     if not icon.isNull():
         app.setWindowIcon(icon)
 

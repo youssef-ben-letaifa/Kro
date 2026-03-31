@@ -1,9 +1,17 @@
 [Desktop Entry]
-Type=Application
-Name=Kronos 2026.1
-Comment=Kronos IDE
-Exec=/usr/bin/env bash -lc 'cd /home/youssef-ben-letaifa/Desktop/Kro && if [ -x .venv/bin/python ]; then .venv/bin/python -m kronos.main; else python3 -m kronos.main; fi'
-Icon=/home/youssef-ben-letaifa/Desktop/Kro/bigIcon.ico
-Terminal=false
 Categories=Science;Development;IDE;
+Comment[en_US]=Kronos IDE
+Comment=Kronos IDE
+Exec=/home/youssef-ben-letaifa/Desktop/Kronos\ Project/Kro/run-kronos.sh
+GenericName[en_US]=
+GenericName=
+Icon=/home/youssef-ben-letaifa/Desktop/Kronos Project/Kro/iconK.ico
+MimeType=
+Name[en_US]=Kronos 2026.1
+Name=Kronos 2026.1
+Path=/home/youssef-ben-letaifa/Desktop/Kronos Project/Kro
 StartupNotify=true
+Terminal=false
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=
