@@ -452,19 +452,49 @@ class MainWindow(QMainWindow):
         self.status.set_kernel_status(True)
 
     def _on_save(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Save File", os.getcwd(), "Python Files (*.py)"
-        )
-        if not path:
-            return
+        current_path = self.center_panel.current_file_path()
+        save_path: Path
+
+        if current_path:
+            save_path = Path(current_path)
+        else:
+            suggested_name = self.center_panel.current_tab_name()
+            if not suggested_name:
+                suggested_name = "untitled.py"
+            if not suggested_name.lower().endswith(".py"):
+                suggested_name = f"{suggested_name}.py"
+
+            initial_path = str(Path(os.getcwd()) / suggested_name)
+            chosen_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save File",
+                initial_path,
+                "Python Files (*.py);;All Files (*.*)",
+            )
+            if not chosen_path:
+                return
+            save_path = Path(chosen_path)
+            if not save_path.suffix:
+                save_path = save_path.with_suffix(".py")
+
         try:
-            Path(path).write_text(self.center_panel.get_current_code(), encoding="utf-8")
+            save_path.write_text(self.center_panel.get_current_code(), encoding="utf-8")
         except OSError as exc:
             QMessageBox.warning(self, "Save failed", str(exc))
+            return
+
+        saved = str(save_path)
+        self.center_panel.set_current_file_path(saved)
+        self.settings_manager.add_recent_file(saved)
+        self._rebuild_recent_menu()
+        self.ribbon.set_breadcrumb(str(save_path.parent))
 
     def _on_open(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open File", os.getcwd(), "Python Files (*.py)"
+            self,
+            "Open File",
+            os.getcwd(),
+            "Python Files (*.py *.pyw);;Text Files (*.txt *.md *.json *.yaml *.yml);;All Files (*.*)",
         )
         if path:
             self._on_open_file(path)

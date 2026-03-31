@@ -316,7 +316,7 @@ class CenterPanel(QWidget):
         self._new_file_button.clicked.connect(self.new_file)
         self.tabs.setCornerWidget(self._new_file_button, Qt.Corner.TopRightCorner)
 
-        self._add_editor_tab("untitle.py", DEFAULT_CODE)
+        self._add_editor_tab("untitled.py", DEFAULT_CODE)
         if self._embedded_aeon_enabled:
             self.tabs.addTab(self._build_aeon_tab(), "Aeon")
 
@@ -378,11 +378,12 @@ class CenterPanel(QWidget):
         self._on_tab_changed(self.tabs.currentIndex())
 
     def new_file(self) -> None:
-        idx = self._add_editor_tab("untitle.py", DEFAULT_CODE)
+        idx = self._add_editor_tab("untitled.py", DEFAULT_CODE)
         self.tabs.setCurrentIndex(idx)
 
     def open_document(self, path: str, code: str) -> None:
-        filename = os.path.basename(path) or "untitle.py"
+        normalized_path = os.path.abspath(path)
+        filename = os.path.basename(normalized_path) or "untitled.py"
         current_page = self.tabs.currentWidget()
         current_editor = self._current_editor()
         current_path = ""
@@ -394,7 +395,7 @@ class CenterPanel(QWidget):
 
         # Reuse the current tab if it is a fresh untitled tab.
         if current_page is not None and not current_path and not current_text.strip():
-            current_page.setProperty("file_path", path)
+            current_page.setProperty("file_path", normalized_path)
             self.tabs.setTabText(self.tabs.currentIndex(), filename)
             if current_editor is not None:
                 current_editor.set_code(code)
@@ -407,20 +408,45 @@ class CenterPanel(QWidget):
             if page is None:
                 continue
             opened_path = str(page.property("file_path") or "")
-            if opened_path == path:
+            if opened_path == normalized_path:
                 self.tabs.setCurrentIndex(idx)
                 editor = page.property("editor_ref")
                 if editor is not None and hasattr(editor, "set_code"):
                     editor.set_code(code)
                 return
 
-        idx = self._add_editor_tab(filename, code, path)
+        idx = self._add_editor_tab(filename, code, normalized_path)
         self.tabs.setCurrentIndex(idx)
 
     def get_current_code(self) -> str:
         """Return the current code from the editor."""
         editor = self._current_editor()
         return editor.get_code() if editor is not None else ""
+
+    def current_file_path(self) -> str:
+        """Return the current tab file path, or an empty string if unsaved."""
+        page = self.tabs.currentWidget()
+        if page is None:
+            return ""
+        return str(page.property("file_path") or "")
+
+    def current_tab_name(self) -> str:
+        """Return the current tab label."""
+        idx = self.tabs.currentIndex()
+        if idx < 0:
+            return "untitled.py"
+        name = self.tabs.tabText(idx).strip()
+        return name or "untitled.py"
+
+    def set_current_file_path(self, path: str) -> None:
+        """Bind the current tab to a saved file path and update tab title."""
+        page = self.tabs.currentWidget()
+        idx = self.tabs.currentIndex()
+        if page is None or idx < 0:
+            return
+        normalized_path = os.path.abspath(path)
+        page.setProperty("file_path", normalized_path)
+        self.tabs.setTabText(idx, os.path.basename(normalized_path) or "untitled.py")
 
     def set_theme(self, is_dark: bool) -> None:
         """Apply theme to all opened editor tabs."""
