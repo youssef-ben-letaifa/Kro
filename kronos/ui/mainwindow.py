@@ -860,17 +860,22 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Toolbox Load Error", f"Failed to load '{name}':\n{exc}")
             return
 
-        window_class = getattr(module, "AutonomousDrivingToolboxWindow", None)
-        if window_class is None:
+        window_class = (
+            getattr(module, "ToolboxWindow", None)
+            or getattr(module, "SignalAnalyzerWindow", None)
+            or getattr(module, "AutonomousDrivingToolboxWindow", None)
+        )
+        launch_fn = getattr(module, "launch", None)
+        if window_class is None and launch_fn is None:
             QMessageBox.warning(
                 self,
                 "Toolbox Error",
-                f"Toolbox '{name}' does not expose AutonomousDrivingToolboxWindow.",
+                f"Toolbox '{name}' does not expose a window class or launch() function.",
             )
             return
 
         try:
-            window = window_class(self)
+            window = window_class(self) if window_class is not None else launch_fn(self)
         except Exception as exc:
             QMessageBox.warning(self, "Toolbox Error", f"Failed to open '{name}':\n{exc}")
             return

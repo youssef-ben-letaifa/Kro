@@ -6,7 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
-from PyQt6.QtCore import QRectF, Qt
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
 
 try:
@@ -79,21 +79,21 @@ def _load_svg(path: Path, size: int, color: str | None) -> QIcon:
     if QSvgRenderer is None:
         return QIcon(str(path))
 
-    renderer = QSvgRenderer(str(path))
-    pixmap = QPixmap(size, size)
-    pixmap.fill(Qt.GlobalColor.transparent)
+    base_icon = QIcon(str(path))
+    if not color:
+        return base_icon
+
+    pixmap = base_icon.pixmap(size, size)
+    if pixmap.isNull():
+        return base_icon
+
     painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-    renderer.render(painter, QRectF(0, 0, float(size), float(size)))
-
-    if color:
-        # PyQt6 enum location differs across builds.
-        mode = getattr(QPainter, "CompositionMode_SourceIn", None)
-        if mode is None:
-            mode = QPainter.CompositionMode.CompositionMode_SourceIn
-        painter.setCompositionMode(mode)
-        painter.fillRect(pixmap.rect(), QColor(color))
-
+    # PyQt6 enum location differs across builds.
+    mode = getattr(QPainter, "CompositionMode_SourceIn", None)
+    if mode is None:
+        mode = QPainter.CompositionMode.CompositionMode_SourceIn
+    painter.setCompositionMode(mode)
+    painter.fillRect(pixmap.rect(), QColor(color))
     painter.end()
     return QIcon(pixmap)
 

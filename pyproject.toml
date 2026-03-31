@@ -46,6 +46,8 @@ packages = [
   "kronos.ui.theme",
   "kronos.native",
   "kronos.engine",
+  "kronos.toolboxes",
+  "kronos.toolboxes.signal_analyzer",
 ]
 
 [tool.setuptools.package-data]
