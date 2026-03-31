@@ -36,8 +36,8 @@ class PersistencePanel(PlotPanel):
             cmap="hot",
         )
         self.figure.colorbar(image, ax=self.axes, pad=0.01)
-        self.axes.set_title(f"Persistence Spectrum - {record.name}", color="#e0e0e0", fontsize=10)
-        self.axes.set_xlabel("Frequency (Hz)", color="#a0a0b0")
-        self.axes.set_ylabel("Magnitude", color="#a0a0b0")
+        self.axes.set_title(f"Persistence Spectrum - {record.name}", color="#cdd6f4", fontsize=10)
+        self.axes.set_xlabel("Frequency (Hz)", color="#a6adc8")
+        self.axes.set_ylabel("Magnitude", color="#a6adc8")
 
         self.cursors.set_image(freq, mag_axis, density)

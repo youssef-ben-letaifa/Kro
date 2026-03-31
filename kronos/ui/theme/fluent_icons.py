@@ -55,6 +55,7 @@ ICON_FILES: Final[dict[str, str]] = {
     # Left navigation
     "files": "ic_fluent_folder_24_regular.svg",
     "workspace": "ic_fluent_table_simple_24_regular.svg",
+    "code": "ic_fluent_code_24_regular.svg",
     "blocks": "ic_fluent_cube_24_regular.svg",
     "snippets": "ic_fluent_code_24_regular.svg",
     "database": "ic_fluent_database_24_regular.svg",

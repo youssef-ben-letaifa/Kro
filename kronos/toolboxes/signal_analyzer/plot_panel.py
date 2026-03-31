@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QSize, pyqtSignal
 from PyQt6.QtWidgets import (
     QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
-    QPushButton,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
+from kronos.ui.theme.fluent_icons import icon_for
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from .cursor_manager import CursorManager
 from .signal_store import SignalStore
+
+apply_mpl_defaults()
 
 
 class PlotPanel(QWidget):
@@ -31,8 +35,8 @@ class PlotPanel(QWidget):
         self._store = store
 
         self._root = QVBoxLayout(self)
-        self._root.setContentsMargins(0, 0, 0, 0)
-        self._root.setSpacing(0)
+        self._root.setContentsMargins(12, 8, 12, 8)
+        self._root.setSpacing(6)
 
         self._header = QFrame()
         self._header.setObjectName("sa_panel_header")
@@ -47,14 +51,20 @@ class PlotPanel(QWidget):
         self._signal_combo.setMinimumWidth(140)
         self._signal_combo.currentIndexChanged.connect(self.refresh)
 
-        self._btn_split = QPushButton("⊞")
+        self._btn_split = QToolButton()
+        self._btn_split.setObjectName("sa_panel_icon_button")
         self._btn_split.setToolTip("Split panel")
-        self._btn_split.setFixedWidth(28)
+        self._btn_split.setIcon(icon_for("layout", size=16, color="#a0b0d0"))
+        self._btn_split.setIconSize(QSize(16, 16))
+        self._btn_split.setFixedSize(24, 24)
         self._btn_split.clicked.connect(lambda: self.request_split.emit(self))
 
-        self._btn_close = QPushButton("✕")
+        self._btn_close = QToolButton()
+        self._btn_close.setObjectName("sa_panel_icon_button")
         self._btn_close.setToolTip("Close panel")
-        self._btn_close.setFixedWidth(28)
+        self._btn_close.setIcon(icon_for("clear", size=16, color="#a0b0d0"))
+        self._btn_close.setIconSize(QSize(16, 16))
+        self._btn_close.setFixedSize(24, 24)
         self._btn_close.clicked.connect(lambda: self.request_close.emit(self))
 
         header_layout.addWidget(self._title)
@@ -66,6 +76,7 @@ class PlotPanel(QWidget):
         self.figure = Figure(figsize=(5.0, 3.0), dpi=100)
         self.axes = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setStyleSheet("background-color: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 6px;")
 
         self._root.addWidget(self._header)
         self._root.addWidget(self.canvas, 1)
@@ -104,10 +115,12 @@ class PlotPanel(QWidget):
         """Apply panel-local dark plotting style."""
         self.figure.patch.set_facecolor("#0d0d1a")
         self.axes.set_facecolor("#0d0d1a")
-        self.axes.tick_params(colors="#a0a0b0")
+        self.axes.tick_params(colors="#6c7086", labelsize=9)
         for spine in self.axes.spines.values():
             spine.set_color("#2a2a4a")
-        self.axes.grid(True, color="#1e1e3a", alpha=0.5, linestyle="--", linewidth=0.7)
+        self.axes.grid(True, color="#1e2a3a", alpha=0.5, linestyle="--", linewidth=0.7)
+        self.axes.title.set_color("#a0b0d0")
+        self.axes.title.set_fontsize(10)
 
     def refresh(self) -> None:
         """Redraw panel contents."""
@@ -125,7 +138,7 @@ class PlotPanel(QWidget):
             transform=self.axes.transAxes,
             ha="center",
             va="center",
-            color="#a0a0b0",
+            color="#a6adc8",
         )
 
     def _rebuild_signal_combo(self, *_args) -> None:

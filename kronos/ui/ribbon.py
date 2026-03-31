@@ -8,6 +8,7 @@ from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -28,24 +29,50 @@ class _RibbonGroup(QFrame):
         super().__init__()
         self.setObjectName("ribbon_group")
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(6, 4, 6, 3)
-        layout.setSpacing(1)
+        layout.setContentsMargins(8, 6, 8, 4)
+        layout.setSpacing(2)
 
-        self.row = QHBoxLayout()
-        self.row.setContentsMargins(0, 0, 0, 0)
-        self.row.setSpacing(6)
-        layout.addLayout(self.row, 1)
+        self.grid = QGridLayout()
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.setHorizontalSpacing(4)
+        self.grid.setVerticalSpacing(4)
+        layout.addLayout(self.grid, 1)
+        self._has_primary = False
+        self._secondary_index = 0
+        self._max_col = 0
 
         label = QLabel(title)
         label.setObjectName("ribbon_group_title")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(label)
 
+    @staticmethod
+    def _compactify(button: QToolButton) -> None:
+        button.setObjectName("ribbon_action_compact")
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        button.setIconSize(QSize(16, 16))
+        button.setMinimumSize(116, 28)
+        button.setMaximumHeight(28)
+
     def add_button(self, button: QToolButton) -> None:
-        self.row.addWidget(button)
+        if button.objectName() == "ribbon_action_primary" and not self._has_primary:
+            self.grid.addWidget(button, 0, 0, 2, 1)
+            self._has_primary = True
+            self._max_col = max(self._max_col, 0)
+            return
+
+        if button.objectName() == "ribbon_action_primary":
+            self._compactify(button)
+
+        start_col = 1 if self._has_primary else 0
+        row = self._secondary_index % 2
+        col = start_col + (self._secondary_index // 2)
+        self.grid.addWidget(button, row, col)
+        self._secondary_index += 1
+        self._max_col = max(self._max_col, col)
 
     def finalize(self) -> None:
-        self.row.addStretch(1)
+        self.grid.setColumnStretch(self._max_col + 1, 1)
 
 
 class MatlabRibbon(QWidget):
@@ -69,8 +96,8 @@ class MatlabRibbon(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("ribbon")
-        self.setMinimumHeight(198)
-        self.setMaximumHeight(228)
+        self.setMinimumHeight(216)
+        self.setMaximumHeight(272)
         self._control_buttons: list[QToolButton] = []
 
         root = QVBoxLayout(self)
@@ -101,10 +128,13 @@ class MatlabRibbon(QWidget):
         row = QWidget()
         row.setObjectName("ribbon_quick_row")
         layout = QHBoxLayout(row)
-        layout.setContentsMargins(10, 4, 10, 4)
+        layout.setContentsMargins(12, 8, 12, 8)
         layout.setSpacing(6)
 
-        layout.addSpacing(2)
+        brand = QLabel("KRONOS")
+        brand.setObjectName("ribbon_brand")
+        layout.addWidget(brand)
+        layout.addSpacing(4)
 
         layout.addWidget(
             self._quick_button("New", "New script", "new", signal=self.new_requested)
@@ -131,10 +161,11 @@ class MatlabRibbon(QWidget):
 
         self._theme_button = self._quick_button(
             "Theme",
-            "Toggle dark/light theme",
+            "Catppuccin Mocha (dark-only theme)",
             "theme_dark",
             signal=self.theme_toggle_requested,
         )
+        self._theme_button.setEnabled(False)
         layout.addWidget(self._theme_button)
         return row
 
@@ -142,7 +173,7 @@ class MatlabRibbon(QWidget):
         row = QWidget()
         row.setObjectName("ribbon_path_row")
         layout = QHBoxLayout(row)
-        layout.setContentsMargins(10, 4, 10, 4)
+        layout.setContentsMargins(12, 8, 12, 8)
         layout.setSpacing(6)
 
         for name, tip in (
@@ -465,8 +496,8 @@ class MatlabRibbon(QWidget):
         panel = QWidget()
         panel.setObjectName("ribbon_panel")
         row = QHBoxLayout(panel)
-        row.setContentsMargins(6, 3, 6, 3)
-        row.setSpacing(5)
+        row.setContentsMargins(12, 8, 12, 8)
+        row.setSpacing(6)
         return panel
 
     def _quick_button(
@@ -511,17 +542,17 @@ class MatlabRibbon(QWidget):
         primary: bool = True,
     ) -> QToolButton:
         button = QToolButton()
-        button.setObjectName("ribbon_action_primary" if primary else "ribbon_action_secondary")
+        button.setObjectName("ribbon_action_primary" if primary else "ribbon_action_compact")
         button.setProperty("icon_name", icon_name)
         button.setText(text)
         button.setToolTip(tooltip)
-        icon_size = 30 if primary else 16
+        icon_size = 22 if primary else 16
         button.setIcon(self._build_icon(icon_name, size=icon_size))
         button.setIconSize(QSize(icon_size, icon_size))
         button.setToolButtonStyle(
             Qt.ToolButtonStyle.ToolButtonTextUnderIcon if primary else Qt.ToolButtonStyle.ToolButtonTextBesideIcon
         )
-        button.setMinimumSize(84, 78 if primary else 30)
+        button.setMinimumSize(52 if primary else 116, 56 if primary else 28)
         if signal is not None:
             button.clicked.connect(signal.emit)
         elif action_id is not None:
@@ -583,7 +614,8 @@ class MatlabRibbon(QWidget):
             button.setEnabled(enabled)
 
     def set_theme_icon(self, theme: str) -> None:
-        icon_name = "theme_light" if theme == "dark" else "theme_dark"
+        del theme
+        icon_name = "theme_dark"
         self._theme_button.setIcon(self._build_icon(icon_name, size=18))
         self._theme_button.setProperty("icon_name", icon_name)
 

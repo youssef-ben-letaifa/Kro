@@ -5,10 +5,13 @@ from __future__ import annotations
 import numpy as np
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from .signal_model import SignalRecord
+
+apply_mpl_defaults()
 
 
 class PannerWidget(QWidget):
@@ -22,21 +25,24 @@ class PannerWidget(QWidget):
         self._record: SignalRecord | None = None
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
+        root.setContentsMargins(12, 8, 12, 8)
+        root.setSpacing(6)
 
         self._plot_frame = QFrame()
         frame_layout = QVBoxLayout(self._plot_frame)
         frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame_layout.setSpacing(0)
 
         self.figure = Figure(figsize=(8.0, 1.2), dpi=100)
         self.axes = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setStyleSheet("background-color: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 6px;")
         frame_layout.addWidget(self.canvas)
 
         self._controls = QWidget()
         controls_layout = QHBoxLayout(self._controls)
-        controls_layout.setContentsMargins(8, 2, 8, 2)
+        controls_layout.setContentsMargins(12, 8, 12, 8)
+        controls_layout.setSpacing(6)
 
         self._start_slider = QSlider(Qt.Orientation.Horizontal)
         self._end_slider = QSlider(Qt.Orientation.Horizontal)
@@ -61,7 +67,7 @@ class PannerWidget(QWidget):
         """Apply dark colors to panner figure."""
         self.figure.patch.set_facecolor("#0d0d1a")
         self.axes.set_facecolor("#0d0d1a")
-        self.axes.tick_params(colors="#a0a0b0", labelsize=7)
+        self.axes.tick_params(colors="#6c7086", labelsize=9)
         for spine in self.axes.spines.values():
             spine.set_color("#2a2a4a")
 
@@ -111,7 +117,7 @@ class PannerWidget(QWidget):
         self.apply_dark_theme()
 
         if self._record is None or self._record.data.size == 0:
-            self.axes.text(0.5, 0.5, "No Signal", transform=self.axes.transAxes, ha="center", va="center", color="#a0a0b0")
+            self.axes.text(0.5, 0.5, "No Signal", transform=self.axes.transAxes, ha="center", va="center", color="#6c7086")
             self.canvas.draw_idle()
             return
 
@@ -122,7 +128,7 @@ class PannerWidget(QWidget):
         total = self._record.duration
         start = self._record.start_time + total * (self._start_slider.value() / 1000.0)
         end = self._record.start_time + total * (self._end_slider.value() / 1000.0)
-        self.axes.axvspan(min(start, end), max(start, end), color="#4cc9f0", alpha=0.2)
+        self.axes.axvspan(min(start, end), max(start, end), color="#7aa2f7", alpha=0.24)
 
         self.axes.set_xticks([])
         self.axes.set_yticks([])

@@ -7,6 +7,8 @@ from pathlib import Path
 
 import matplotlib
 
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
+
 try:
     import mpl_toolkits.mplot3d  # noqa: F401
 except Exception:
@@ -32,6 +34,7 @@ def _ensure_matplotlib_config_dir() -> None:
 
 _ensure_matplotlib_config_dir()
 matplotlib.use("QtAgg")
+apply_mpl_defaults()
 
 import matplotlib.pyplot as plt  # noqa: F401
 from matplotlib.figure import Figure
@@ -138,6 +141,7 @@ class FigurePanel(QWidget):
         self._is_dark = True
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setStyleSheet("border-radius: 6px; border: 1px solid #2a2a4a; background: #0d0d1a;")
         self.toolbar = NavToolbar(self.canvas, self)
         self._rotate_3d_action = self.toolbar.addAction("3D Rotate")
         self._rotate_3d_action.setCheckable(True)
@@ -178,21 +182,14 @@ class FigurePanel(QWidget):
         self.set_theme(True)
 
     def set_theme(self, is_dark: bool) -> None:
-        self._is_dark = is_dark
-        if is_dark:
-            self._empty_hint.setStyleSheet("color: #6a7280; padding: 12px;")
-            self.toolbar.setStyleSheet(
-                "QToolBar { background: #0b0e15; border-bottom: 1px solid #1e2128; }"
-                "QToolButton { background: #13192a; color: #c8ccd4; border: 1px solid #1e2128; }"
-                "QToolButton:hover { background: #161b24; border-color: #1a6fff; }"
-            )
-        else:
-            self._empty_hint.setStyleSheet("color: #4a5060; padding: 12px;")
-            self.toolbar.setStyleSheet(
-                "QToolBar { background: #f8f9fa; border-bottom: 1px solid #cfd6e0; }"
-                "QToolButton { background: #ffffff; color: #1f2430; border: 1px solid #cfd6e0; }"
-                "QToolButton:hover { background: #e8ebf2; border-color: #9ebae5; }"
-            )
+        self._is_dark = True
+        self._empty_hint.setStyleSheet("color: #6c7086; padding: 12px;")
+        self.toolbar.setStyleSheet(
+            "QToolBar { background: #1a1a2e; border: none; }"
+            "QToolButton { background: transparent; border: none; border-radius: 6px; color: #cdd6f4; }"
+            "QToolButton:hover { background: rgba(255,255,255,0.06); }"
+            "QToolButton:pressed { background: rgba(255,255,255,0.10); }"
+        )
         self._apply_theme_to_figure()
         self.canvas.draw_idle()
 
@@ -453,30 +450,24 @@ class FigurePanel(QWidget):
 
     def _apply_theme_to_figure(self) -> None:
         """Apply panel theme colors to the loaded Matplotlib figure."""
-        if self._is_dark:
-            face_color = "#08090e"
-            axis_color = "#08090e"
-            text_color = "#6a7280"
-            tick_color = "#3a4050"
-            spine_color = "#1e2128"
-            grid_color = "#1a1f2a"
-            legend_text = "#c8ccd4"
-        else:
-            face_color = "#ffffff"
-            axis_color = "#ffffff"
-            text_color = "#4a5060"
-            tick_color = "#5a6170"
-            spine_color = "#cfd6e0"
-            grid_color = "#dfe5f0"
-            legend_text = "#1f2430"
+        face_color = "#0d0d1a"
+        axis_color = "#0d0d1a"
+        text_color = "#a0b0d0"
+        tick_color = "#6c7086"
+        spine_color = "#2a2a4a"
+        grid_color = "#1e2a3a"
+        legend_face = "#16213e"
+        legend_text = "#cdd6f4"
 
         self.figure.set_facecolor(face_color)
         for ax in self.figure.axes:
             ax.set_facecolor(axis_color)
             ax.title.set_color(text_color)
+            ax.title.set_fontsize(10)
+            ax.title.set_fontweight("normal")
             ax.xaxis.label.set_color(text_color)
             ax.yaxis.label.set_color(text_color)
-            ax.tick_params(colors=tick_color)
+            ax.tick_params(colors=tick_color, labelsize=9)
             for spine in ax.spines.values():
                 spine.set_color(spine_color)
 
@@ -502,10 +493,11 @@ class FigurePanel(QWidget):
 
             legend = ax.get_legend()
             if legend is not None:
-                legend.get_frame().set_facecolor(axis_color)
+                legend.get_frame().set_facecolor(legend_face)
                 legend.get_frame().set_edgecolor(spine_color)
                 for text in legend.get_texts():
                     text.set_color(legend_text)
+                    text.set_fontsize(9)
 
     def _enable_3d_navigation(self) -> None:
         """Rebind 3D mouse interactions after moving figures across canvases."""

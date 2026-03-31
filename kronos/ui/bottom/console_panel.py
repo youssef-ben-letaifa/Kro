@@ -116,14 +116,14 @@ except Exception:
 
 _KRONOS_THEMES = {
     "dark": {
-        "fig": "#08090e",
-        "ax": "#08090e",
-        "text": "#6a7280",
-        "tick": "#3a4050",
-        "spine": "#1e2128",
-        "grid": "#1a1f2a",
-        "legend": "#c8ccd4",
-        "accent": "#1a6fff",
+        "fig": "#1e1e2e",
+        "ax": "#1e1e2e",
+        "text": "#cdd6f4",
+        "tick": "#a6adc8",
+        "spine": "#45475a",
+        "grid": "#313244",
+        "legend": "#cdd6f4",
+        "accent": "#89b4fa",
     },
     "light": {
         "fig": "#ffffff",
@@ -133,7 +133,7 @@ _KRONOS_THEMES = {
         "spine": "#cbd5e1",
         "grid": "#e2e8f0",
         "legend": "#0f172a",
-        "accent": "#1a6fff",
+        "accent": "#89b4fa",
     },
 }
 _KRONOS_THEME_NAME = "dark"
@@ -581,22 +581,19 @@ __kronos_set_theme(_KRONOS_THEME_NAME)
         return getattr(self, "_kc", None)
 
     def set_theme(self, is_dark: bool) -> None:
-        self._is_dark_theme = is_dark
+        self._is_dark_theme = True
         if not hasattr(self, "_console"):
             return
-        if is_dark:
-            self._console.set_default_style("linux")
-            self._console.syntax_style = "monokai"
-        else:
-            self._console.set_default_style("lightbg")
-            self._console.syntax_style = "default"
-        self._sync_kernel_plot_theme(is_dark)
+        self._console.set_default_style("linux")
+        self._console.syntax_style = "monokai"
+        self._sync_kernel_plot_theme(True)
 
     def _sync_kernel_plot_theme(self, is_dark: bool) -> None:
         kc = self.get_kernel_client()
         if kc is None:
             return
-        theme_name = "dark" if is_dark else "light"
+        del is_dark
+        theme_name = "dark"
         code = (
             "try:\n"
             f"    __kronos_set_theme({theme_name!r})\n"
@@ -670,14 +667,14 @@ except Exception:
 
 _KRONOS_THEMES = {
     "dark": {
-        "fig": "#08090e",
-        "ax": "#08090e",
-        "text": "#6a7280",
-        "tick": "#3a4050",
-        "spine": "#1e2128",
-        "grid": "#1a1f2a",
-        "legend": "#c8ccd4",
-        "accent": "#1a6fff",
+        "fig": "#1e1e2e",
+        "ax": "#1e1e2e",
+        "text": "#cdd6f4",
+        "tick": "#a6adc8",
+        "spine": "#45475a",
+        "grid": "#313244",
+        "legend": "#cdd6f4",
+        "accent": "#89b4fa",
     },
     "light": {
         "fig": "#ffffff",
@@ -687,7 +684,7 @@ _KRONOS_THEMES = {
         "spine": "#cbd5e1",
         "grid": "#e2e8f0",
         "legend": "#0f172a",
-        "accent": "#1a6fff",
+        "accent": "#89b4fa",
     },
 }
 _KRONOS_THEME_NAME = "dark"

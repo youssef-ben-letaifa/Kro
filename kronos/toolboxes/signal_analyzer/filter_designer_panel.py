@@ -18,12 +18,15 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from scipy import signal
 
 from .preprocessing_engine import DesignedFilter, PreprocessingEngine
 from .signal_store import SignalStore
+
+apply_mpl_defaults()
 
 
 @dataclass(slots=True)
@@ -51,23 +54,29 @@ class FilterDesignerPanel(QWidget):
         self._debounce.timeout.connect(self._render_preview)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(8, 8, 8, 8)
-        root.setSpacing(8)
+        root.setContentsMargins(12, 8, 12, 8)
+        root.setSpacing(6)
 
         self._type_group = QGroupBox("Filter Type")
         type_form = QFormLayout(self._type_group)
+        type_form.setContentsMargins(12, 8, 12, 8)
+        type_form.setSpacing(6)
         self.kind_combo = QComboBox()
         self.kind_combo.addItems(["lowpass", "highpass", "bandpass", "bandstop"])
         type_form.addRow("Kind", self.kind_combo)
 
         self._method_group = QGroupBox("Design Method")
         method_form = QFormLayout(self._method_group)
+        method_form.setContentsMargins(12, 8, 12, 8)
+        method_form.setSpacing(6)
         self.method_combo = QComboBox()
         self.method_combo.addItems(["butterworth", "cheby1", "cheby2", "ellip", "fir-window"])
         method_form.addRow("Method", self.method_combo)
 
         self._params_group = QGroupBox("Parameters")
         params_form = QFormLayout(self._params_group)
+        params_form.setContentsMargins(12, 8, 12, 8)
+        params_form.setSpacing(6)
         self.order_spin = QSpinBox()
         self.order_spin.setRange(1, 500)
         self.order_spin.setValue(4)
@@ -110,14 +119,19 @@ class FilterDesignerPanel(QWidget):
 
         self._preview_group = QGroupBox("Response Preview")
         preview_layout = QVBoxLayout(self._preview_group)
+        preview_layout.setContentsMargins(12, 8, 12, 8)
+        preview_layout.setSpacing(6)
         self.figure = Figure(figsize=(3.0, 1.6), dpi=100)
         self.axes_mag = self.figure.add_subplot(211)
         self.axes_phase = self.figure.add_subplot(212)
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setStyleSheet("background-color: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 6px;")
         preview_layout.addWidget(self.canvas)
 
         self._actions = QWidget()
         action_layout = QHBoxLayout(self._actions)
+        action_layout.setContentsMargins(0, 0, 0, 0)
+        action_layout.setSpacing(6)
         self.design_btn = QPushButton("Design")
         self.apply_selected_btn = QPushButton("Apply Selected")
         self.apply_visible_btn = QPushButton("Apply Visible")
@@ -184,18 +198,20 @@ class FilterDesignerPanel(QWidget):
 
         self.axes_mag.clear()
         self.axes_phase.clear()
-        self.axes_mag.plot(w / np.pi, 20.0 * np.log10(np.maximum(np.abs(h), 1e-10)), color="#4cc9f0", lw=1.2)
-        self.axes_phase.plot(w / np.pi, np.unwrap(np.angle(h)), color="#f72585", lw=1.0)
+        self.axes_mag.plot(w / np.pi, 20.0 * np.log10(np.maximum(np.abs(h), 1e-10)), color="#89b4fa", lw=1.2)
+        self.axes_phase.plot(w / np.pi, np.unwrap(np.angle(h)), color="#cba6f7", lw=1.0)
         self.axes_mag.set_ylabel("Mag (dB)")
         self.axes_phase.set_ylabel("Phase")
         self.axes_phase.set_xlabel("Normalized Frequency")
 
         for ax in (self.axes_mag, self.axes_phase):
             ax.set_facecolor("#0d0d1a")
-            ax.tick_params(colors="#a0a0b0", labelsize=7)
+            ax.tick_params(colors="#6c7086", labelsize=9)
             for spine in ax.spines.values():
                 spine.set_color("#2a2a4a")
-            ax.grid(True, color="#1e1e3a", alpha=0.45, linestyle="--")
+            ax.grid(True, color="#1e2a3a", alpha=0.5, linestyle="--")
+            ax.title.set_color("#a0b0d0")
+            ax.title.set_fontsize(10)
 
         self.figure.patch.set_facecolor("#0d0d1a")
         self.canvas.draw_idle()

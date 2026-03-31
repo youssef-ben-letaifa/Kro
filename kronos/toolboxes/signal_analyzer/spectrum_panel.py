@@ -56,8 +56,8 @@ class SpectrumPanel(PlotPanel):
             ylabel = label
 
         self.axes.plot(x, y_plot, color=record.color.name(), linewidth=1.4)
-        self.axes.set_title(f"Spectrum - {record.name}", color="#e0e0e0", fontsize=10)
-        self.axes.set_xlabel("Frequency (Hz)", color="#a0a0b0")
-        self.axes.set_ylabel(ylabel, color="#a0a0b0")
+        self.axes.set_title(f"Spectrum - {record.name}", color="#cdd6f4", fontsize=10)
+        self.axes.set_xlabel("Frequency (Hz)", color="#a6adc8")
+        self.axes.set_ylabel(ylabel, color="#a6adc8")
 
         self.cursors.set_series(x, {record.name: y_plot})

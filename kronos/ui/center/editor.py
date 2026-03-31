@@ -58,10 +58,10 @@ if _QSCI_AVAILABLE:
             self._lexer = QsciLexerPython(self)
             self.setLexer(self._lexer)
             self.setMarginType(0, QsciScintilla.MarginType.NumberMargin)
-            self.setMarginWidth(0, "0000")
+            self.setMarginWidth(0, "00000")
             self.setCaretLineVisible(True)
             self.set_theme(True)
-            self.setCaretLineBackgroundColor(QColor("#13192a"))
+            self.setCaretLineBackgroundColor(QColor("#2a2d42"))
 
             self.setAutoCompletionSource(QsciScintilla.AutoCompletionSource.AcsAll)
             self.setAutoCompletionThreshold(2)
@@ -72,11 +72,11 @@ if _QSCI_AVAILABLE:
             self.setIndentationGuides(True)
             self.setBraceMatching(QsciScintilla.BraceMatch.SloppyBraceMatch)
             self.setFolding(QsciScintilla.FoldStyle.BoxedTreeFoldStyle)
-            self.setFoldMarginColors(QColor("#161b22"), QColor("#161b22"))
+            self.setFoldMarginColors(QColor("#1e1e2e"), QColor("#1e1e2e"))
             self.setCaretWidth(2)
             self.setEdgeMode(QsciScintilla.EdgeMode.EdgeLine)
             self.setEdgeColumn(100)
-            self.setEdgeColor(QColor("#30363d"))
+            self.setEdgeColor(QColor("#45475a"))
 
         @staticmethod
         def _to_scintilla_color(color: QColor) -> int:
@@ -110,85 +110,49 @@ if _QSCI_AVAILABLE:
         def set_theme(self, is_dark: bool) -> None:
             lexer = self._lexer or self.lexer()
             if is_dark:
-                self._apply_scintilla_defaults("#c8ccd4", "#0e1117")
+                self._apply_scintilla_defaults("#cdd6f4", "#1e1e2e")
                 if lexer:
-                    lexer.setDefaultColor(QColor("#c8ccd4"))
-                    lexer.setDefaultPaper(QColor("#0e1117"))
-                    lexer.setPaper(QColor("#0e1117"), -1)
-                    self._set_lexer_style_color(lexer, "Default", "#c8ccd4")
-                    self._set_lexer_style_color(lexer, "Identifier", "#c8ccd4")
-                    self._set_lexer_style_color(lexer, "Keyword", "#c678dd")
-                    self._set_lexer_style_color(lexer, "ClassName", "#61afef")
-                    self._set_lexer_style_color(lexer, "FunctionMethodName", "#61afef")
-                    self._set_lexer_style_color(lexer, "DoubleQuotedString", "#98c379")
-                    self._set_lexer_style_color(lexer, "SingleQuotedString", "#98c379")
-                    self._set_lexer_style_color(lexer, "TripleSingleQuotedString", "#98c379")
-                    self._set_lexer_style_color(lexer, "TripleDoubleQuotedString", "#98c379")
-                    self._set_lexer_style_color(lexer, "DoubleQuotedFString", "#98c379")
-                    self._set_lexer_style_color(lexer, "SingleQuotedFString", "#98c379")
-                    self._set_lexer_style_color(lexer, "TripleSingleQuotedFString", "#98c379")
-                    self._set_lexer_style_color(lexer, "TripleDoubleQuotedFString", "#98c379")
-                    self._set_lexer_style_color(lexer, "Number", "#e5c07b")
-                    self._set_lexer_style_color(lexer, "Comment", "#6b7280")
-                    self._set_lexer_style_color(lexer, "CommentBlock", "#6b7280")
-                    self._set_lexer_style_color(lexer, "Operator", "#56b6c2")
-                    self._set_lexer_style_color(lexer, "Decorator", "#d946ef")
-                    self._set_lexer_style_color(lexer, "HighlightedIdentifier", "#f59e0b")
-                    self._set_lexer_style_color(lexer, "UnclosedString", "#ef4444")
+                    lexer.setDefaultColor(QColor("#cdd6f4"))
+                    lexer.setDefaultPaper(QColor("#1e1e2e"))
+                    lexer.setPaper(QColor("#1e1e2e"), -1)
+                    self._set_lexer_style_color(lexer, "Default", "#cdd6f4")
+                    self._set_lexer_style_color(lexer, "Identifier", "#cdd6f4")
+                    self._set_lexer_style_color(lexer, "Keyword", "#cba6f7")
+                    self._set_lexer_style_color(lexer, "ClassName", "#89b4fa")
+                    self._set_lexer_style_color(lexer, "FunctionMethodName", "#89b4fa")
+                    self._set_lexer_style_color(lexer, "DoubleQuotedString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "SingleQuotedString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "TripleSingleQuotedString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "TripleDoubleQuotedString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "DoubleQuotedFString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "SingleQuotedFString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "TripleSingleQuotedFString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "TripleDoubleQuotedFString", "#a6e3a1")
+                    self._set_lexer_style_color(lexer, "Number", "#fab387")
+                    self._set_lexer_style_color(lexer, "Comment", "#6c7086")
+                    self._set_lexer_style_color(lexer, "CommentBlock", "#6c7086")
+                    self._set_lexer_style_color(lexer, "Operator", "#89dceb")
+                    self._set_lexer_style_color(lexer, "Decorator", "#f5c2e7")
+                    self._set_lexer_style_color(lexer, "HighlightedIdentifier", "#f9e2af")
+                    self._set_lexer_style_color(lexer, "UnclosedString", "#f38ba8")
                 if hasattr(self, "setPaper"):
-                    self.setPaper(QColor("#0e1117"))
+                    self.setPaper(QColor("#1e1e2e"))
                 if hasattr(self, "setColor"):
-                    self.setColor(QColor("#c8ccd4"))
-                self.setMarginsBackgroundColor(QColor("#0b0e15"))
-                self.setMarginsForegroundColor(QColor("#3a4050"))
-                self.setCaretForegroundColor(QColor("#c8ccd4"))
-                self.setCaretLineBackgroundColor(QColor("#13192a"))
-                self.setFoldMarginColors(QColor("#161b22"), QColor("#161b22"))
-                self.setEdgeColor(QColor("#30363d"))
+                    self.setColor(QColor("#cdd6f4"))
+                self.setMarginsBackgroundColor(QColor("#181825"))
+                self.setMarginsForegroundColor(QColor("#6c7086"))
+                self.setCaretForegroundColor(QColor("#cdd6f4"))
+                self.setCaretLineBackgroundColor(QColor("#2a2d42"))
+                self.setFoldMarginColors(QColor("#1e1e2e"), QColor("#1e1e2e"))
+                self.setEdgeColor(QColor("#45475a"))
                 if hasattr(self, "setSelectionBackgroundColor"):
-                    self.setSelectionBackgroundColor(QColor("#264f78"))
+                    self.setSelectionBackgroundColor(QColor("#45475a"))
                 if hasattr(self, "setSelectionForegroundColor"):
-                    self.setSelectionForegroundColor(QColor("#ffffff"))
+                    self.setSelectionForegroundColor(QColor("#f5e0dc"))
             else:
-                self._apply_scintilla_defaults("#111827", "#ffffff")
-                if lexer:
-                    lexer.setDefaultColor(QColor("#111827"))
-                    lexer.setDefaultPaper(QColor("#ffffff"))
-                    lexer.setPaper(QColor("#ffffff"), -1)
-                    self._set_lexer_style_color(lexer, "Default", "#111827")
-                    self._set_lexer_style_color(lexer, "Identifier", "#111827")
-                    self._set_lexer_style_color(lexer, "Keyword", "#7c3aed")
-                    self._set_lexer_style_color(lexer, "ClassName", "#2563eb")
-                    self._set_lexer_style_color(lexer, "FunctionMethodName", "#0369a1")
-                    self._set_lexer_style_color(lexer, "DoubleQuotedString", "#166534")
-                    self._set_lexer_style_color(lexer, "SingleQuotedString", "#166534")
-                    self._set_lexer_style_color(lexer, "TripleSingleQuotedString", "#166534")
-                    self._set_lexer_style_color(lexer, "TripleDoubleQuotedString", "#166534")
-                    self._set_lexer_style_color(lexer, "DoubleQuotedFString", "#166534")
-                    self._set_lexer_style_color(lexer, "SingleQuotedFString", "#166534")
-                    self._set_lexer_style_color(lexer, "TripleSingleQuotedFString", "#166534")
-                    self._set_lexer_style_color(lexer, "TripleDoubleQuotedFString", "#166534")
-                    self._set_lexer_style_color(lexer, "Number", "#b45309")
-                    self._set_lexer_style_color(lexer, "Comment", "#64748b")
-                    self._set_lexer_style_color(lexer, "CommentBlock", "#64748b")
-                    self._set_lexer_style_color(lexer, "Operator", "#334155")
-                    self._set_lexer_style_color(lexer, "Decorator", "#be185d")
-                    self._set_lexer_style_color(lexer, "HighlightedIdentifier", "#7c3aed")
-                    self._set_lexer_style_color(lexer, "UnclosedString", "#b91c1c")
-                if hasattr(self, "setPaper"):
-                    self.setPaper(QColor("#ffffff"))
-                if hasattr(self, "setColor"):
-                    self.setColor(QColor("#111827"))
-                self.setMarginsBackgroundColor(QColor("#eef3fa"))
-                self.setMarginsForegroundColor(QColor("#64748b"))
-                self.setCaretForegroundColor(QColor("#111827"))
-                self.setCaretLineBackgroundColor(QColor("#f3f7fd"))
-                self.setFoldMarginColors(QColor("#e6eef9"), QColor("#e6eef9"))
-                self.setEdgeColor(QColor("#d6dee9"))
-                if hasattr(self, "setSelectionBackgroundColor"):
-                    self.setSelectionBackgroundColor(QColor("#cfe5ff"))
-                if hasattr(self, "setSelectionForegroundColor"):
-                    self.setSelectionForegroundColor(QColor("#0f172a"))
+                # Dark-only app: keep Catppuccin Mocha styling even if called with light.
+                self.set_theme(True)
+                return
             if hasattr(self, "recolor"):
                 self.recolor()
 
@@ -198,10 +162,10 @@ if _QSCI_AVAILABLE:
             available = QFontDatabase.families()
             for family in candidates:
                 if family in available:
-                    font = QFont(family, 13)
+                    font = QFont(family, 15)
                     font.setFixedPitch(True)
                     return font
-            return QFont("Courier New", 13)
+            return QFont("Courier New", 15)
 
         def get_code(self) -> str:
             """Return the editor contents."""
@@ -223,7 +187,7 @@ else:
 
         def __init__(self) -> None:
             super().__init__()
-            font = QFont("Courier New", 13)
+            font = QFont("JetBrains Mono", 15)
             font.setFixedPitch(True)
             self.setFont(font)
             self.setPlainText(DEFAULT_CODE)
@@ -238,21 +202,16 @@ else:
             if is_dark:
                 self.setStyleSheet(
                     "QPlainTextEdit {"
-                    " background: #0e1117;"
-                    " color: #c8ccd4;"
-                    " selection-background-color: #264f78;"
-                    " selection-color: #ffffff;"
+                    " background: #1e1e2e;"
+                    " color: #cdd6f4;"
+                    " selection-background-color: #45475a;"
+                    " selection-color: #f5e0dc;"
+                    " border: 1px solid #313244;"
                     "}"
                 )
             else:
-                self.setStyleSheet(
-                    "QPlainTextEdit {"
-                    " background: #ffffff;"
-                    " color: #1f2937;"
-                    " selection-background-color: #cfe5ff;"
-                    " selection-color: #0f172a;"
-                    "}"
-                )
+                # Dark-only app: keep Catppuccin Mocha styling even if called with light.
+                self.set_theme(True)
 
         def set_code(self, code: str) -> None:
             """Replace the editor contents."""
@@ -282,9 +241,9 @@ class EditorMinimap(QPlainTextEdit):
         self.setObjectName("editor_minimap")
         self.setStyleSheet(
             "QPlainTextEdit#editor_minimap {"
-            " background: #0d1117;"
-            " border-left: 1px solid #30363d;"
-            " color: #8b949e;"
+            " background: #181825;"
+            " border-left: 1px solid #313244;"
+            " color: #6c7086;"
             "}"
         )
 

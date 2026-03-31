@@ -145,14 +145,14 @@ class CursorManager:
             return
 
         if cursor.line_v is None:
-            (cursor.line_v,) = self._ax.plot([x, x], self._ax.get_ylim(), linestyle="--", color="#ffffff", alpha=0.85, lw=1.0)
+            (cursor.line_v,) = self._ax.plot([x, x], self._ax.get_ylim(), linestyle="--", color="#cdd6f4", alpha=0.88, lw=1.0)
         else:
             cursor.line_v.set_xdata([x, x])
             cursor.line_v.set_ydata(self._ax.get_ylim())
 
         if with_horizontal:
             if cursor.line_h is None:
-                (cursor.line_h,) = self._ax.plot(self._ax.get_xlim(), [y, y], linestyle="--", color="#ffffff", alpha=0.75, lw=1.0)
+                (cursor.line_h,) = self._ax.plot(self._ax.get_xlim(), [y, y], linestyle="--", color="#cdd6f4", alpha=0.78, lw=1.0)
             else:
                 cursor.line_h.set_xdata(self._ax.get_xlim())
                 cursor.line_h.set_ydata([y, y])
@@ -167,8 +167,8 @@ class CursorManager:
                 y,
                 text,
                 fontsize=8,
-                color="#e0e0e0",
-                bbox={"boxstyle": "round,pad=0.25", "facecolor": "#0d0d1a", "edgecolor": "#4cc9f0", "alpha": 0.9},
+                color="#cdd6f4",
+                bbox={"boxstyle": "round,pad=0.25", "facecolor": "#181825", "edgecolor": "#89b4fa", "alpha": 0.92},
             )
         else:
             cursor.text_artist.set_position((x, y))

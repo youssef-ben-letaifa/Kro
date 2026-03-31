@@ -20,8 +20,8 @@ _DEFAULTS: dict[str, Any] = {
     "editor/word_wrap": False,
     "editor/show_whitespace": False,
     # ── Appearance ──
-    "appearance/theme": "light",
-    "appearance/accent_color": "#1a6fff",
+    "appearance/theme": "dark",
+    "appearance/accent_color": "#89b4fa",
     "appearance/sidebar_width": 200,
     "appearance/panel_sizes": [200, 860, 220],
     "appearance/font_ui": "Noto Sans",
@@ -62,6 +62,8 @@ class SettingsManager(QObject):
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value for *key*, falling back to default or global default."""
+        if key == "appearance/theme":
+            return "dark"
         fallback = default if default is not None else _DEFAULTS.get(key)
         value = self._qsettings.value(key, fallback)
         # QSettings stores everything as strings; coerce back to expected type.
@@ -72,6 +74,8 @@ class SettingsManager(QObject):
 
     def set(self, key: str, value: Any) -> None:
         """Persist a setting and emit change notification."""
+        if key == "appearance/theme":
+            value = "dark"
         if isinstance(value, (list, dict)):
             self._qsettings.setValue(key, json.dumps(value))
         else:

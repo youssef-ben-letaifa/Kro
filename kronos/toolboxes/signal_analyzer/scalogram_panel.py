@@ -47,8 +47,8 @@ class ScalogramPanel(PlotPanel):
             cmap=self._cmap,
         )
         self.figure.colorbar(image, ax=self.axes, pad=0.01)
-        self.axes.set_title(f"Scalogram - {record.name}", color="#e0e0e0", fontsize=10)
-        self.axes.set_xlabel("Time (s)", color="#a0a0b0")
-        self.axes.set_ylabel("Pseudo-Frequency (Hz)", color="#a0a0b0")
+        self.axes.set_title(f"Scalogram - {record.name}", color="#cdd6f4", fontsize=10)
+        self.axes.set_xlabel("Time (s)", color="#a6adc8")
+        self.axes.set_ylabel("Pseudo-Frequency (Hz)", color="#a6adc8")
 
         self.cursors.set_image(time_axis, freq_axis, np.abs(mag))

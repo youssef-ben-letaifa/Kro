@@ -9,10 +9,12 @@ from PyQt6.QtCore import QElapsedTimer, QTimer
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from kronos.ui.theme import apply_stylesheet
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
 
 
-def _load_stylesheet(app: QApplication, theme: str = "light") -> None:
+def _load_stylesheet(app: QApplication, theme: str = "dark") -> None:
     """Load and apply the theme stylesheet."""
+    apply_mpl_defaults()
     apply_stylesheet(app, theme)
 
 

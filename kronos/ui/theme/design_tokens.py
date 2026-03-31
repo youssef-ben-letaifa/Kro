@@ -2,81 +2,59 @@
 
 from __future__ import annotations
 
+_CATPPUCCIN_MOCHA = {
+    # Core surfaces
+    "bg_primary": "#0d0d1a",
+    "bg_secondary": "#1a1a2e",
+    "bg_elevated": "#16213e",
+    "bg_hover": "#1e2d4a",
+    # Ribbon + bars
+    "ribbon_top": "#1a1a2e",
+    "ribbon_bottom": "#16213e",
+    "ribbon_tab_active": "#16213e",
+    "ribbon_tab_inactive": "#1a1a2e",
+    "ribbon_tab_border": "#2a2a4a",
+    "path_bar": "#0f1628",
+    "toolbar_bg": "#1a1a2e",
+    # Accents
+    "accent": "#7aa2f7",
+    "accent_hover": "#4361ee",
+    "accent_teal": "#4cc9f0",
+    "accent_violet": "#9d7de0",
+    "accent_amber": "#f9e2af",
+    "accent_rose": "#f38ba8",
+    "accent_lime": "#a6e3a1",
+    "success": "#a6e3a1",
+    "warning": "#f9e2af",
+    "error": "#f72585",
+    # Text
+    "text_primary": "#cdd6f4",
+    "text_secondary": "#6c7086",
+    # Borders
+    "border": "#2a2a4a",
+    "border_focus": "#7aa2f7",
+    "shadow": "#0b0d15",
+}
+
 THEME_COLORS = {
-    "dark": {
-        # Core surfaces
-        "bg_primary": "#0D1024",
-        "bg_secondary": "#141B37",
-        "bg_elevated": "#1C2450",
-        # Ribbon + bars
-        "ribbon_top": "#5A70FF",
-        "ribbon_bottom": "#1A2256",
-        "ribbon_tab_active": "#2A3B92",
-        "ribbon_tab_inactive": "#3F56E0",
-        "ribbon_tab_border": "#5B6FD3",
-        "path_bar": "#121A40",
-        "toolbar_bg": "#18204B",
-        # Accents
-        "accent": "#5E73FF",
-        "accent_hover": "#7F92FF",
-        "accent_teal": "#38C2C2",
-        "accent_violet": "#A78BFA",
-        "accent_amber": "#FFB347",
-        "accent_rose": "#FF7FA3",
-        "accent_lime": "#83D86D",
-        "success": "#3FB950",
-        "warning": "#D29922",
-        "error": "#F85149",
-        # Text
-        "text_primary": "#EAF0FF",
-        "text_secondary": "#B7C4EA",
-        # Borders
-        "border": "#34407C",
-        "border_focus": "#5E73FF",
-        "shadow": "#090D23",
-    },
-    "light": {
-        # Core surfaces
-        "bg_primary": "#F3F6FF",
-        "bg_secondary": "#FFFFFF",
-        "bg_elevated": "#EAF0FF",
-        # Ribbon + bars
-        "ribbon_top": "#5E73FF",
-        "ribbon_bottom": "#E6EDFF",
-        "ribbon_tab_active": "#FFFFFF",
-        "ribbon_tab_inactive": "#4760E8",
-        "ribbon_tab_border": "#B8C6F5",
-        "path_bar": "#EEF3FF",
-        "toolbar_bg": "#E7EEFF",
-        # Accents
-        "accent": "#4F66F6",
-        "accent_hover": "#6E83FF",
-        "accent_teal": "#008A8A",
-        "accent_violet": "#6D55D8",
-        "accent_amber": "#C97700",
-        "accent_rose": "#C94C78",
-        "accent_lime": "#4A8F2A",
-        "success": "#2E9B43",
-        "warning": "#A86F09",
-        "error": "#C63B39",
-        # Text
-        "text_primary": "#0E1B47",
-        "text_secondary": "#4C5D8F",
-        # Borders
-        "border": "#C4D0F4",
-        "border_focus": "#4F66F6",
-        "shadow": "#D5DFFF",
-    },
+    # Preferred explicit theme id.
+    "catppuccin_mocha": dict(_CATPPUCCIN_MOCHA),
+    # Backward compatible aliases.
+    "dark": dict(_CATPPUCCIN_MOCHA),
+    "light": dict(_CATPPUCCIN_MOCHA),
 }
 
 
 def get_colors(theme: str = "dark") -> dict[str, str]:
-    """Return colors for a supported theme; fallback to dark."""
-    return THEME_COLORS.get(theme, THEME_COLORS["dark"])
+    """Return colors for a supported theme; fallback to Catppuccin Mocha."""
+    key = (theme or "").strip().lower()
+    if key in {"catppuccin", "catppuccin-mocha", "mocha"}:
+        key = "catppuccin_mocha"
+    return THEME_COLORS.get(key, THEME_COLORS["catppuccin_mocha"])
 
 
 # Backward-compatible default for callers that do not pass a theme.
-COLORS = get_colors("dark")
+COLORS = get_colors("catppuccin_mocha")
 
 FONTS = {
     "ui": "Segoe UI",

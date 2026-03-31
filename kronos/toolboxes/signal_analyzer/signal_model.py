@@ -10,14 +10,14 @@ from PyQt6.QtGui import QColor
 
 
 DEFAULT_SIGNAL_COLORS: tuple[str, ...] = (
-    "#4cc9f0",
-    "#7209b7",
-    "#f72585",
-    "#4361ee",
-    "#4daf4a",
-    "#ff7f00",
-    "#a65628",
-    "#984ea3",
+    "#89b4fa",
+    "#cba6f7",
+    "#f5c2e7",
+    "#74c7ec",
+    "#a6e3a1",
+    "#fab387",
+    "#f9e2af",
+    "#b4befe",
 )
 
 

@@ -136,15 +136,17 @@ class SettingsDialog(QDialog):
         scroll, form = self._scrollable_form()
 
         theme_combo = QComboBox()
-        theme_combo.addItems(["dark", "light"])
-        theme_combo.setCurrentText(self._sm.get("appearance/theme", "light"))
+        theme_combo.addItems(["catppuccin_mocha (dark)"])
+        theme_combo.setCurrentText("catppuccin_mocha (dark)")
+        theme_combo.setEnabled(False)
         self._widgets["appearance/theme"] = theme_combo
         form.addRow("Theme:", theme_combo)
+        self._add_description(form, "Kronos now uses Catppuccin Mocha as the single global theme.")
 
         accent_btn = QPushButton()
-        accent_color = self._sm.get("appearance/accent_color", "#1a6fff")
+        accent_color = self._sm.get("appearance/accent_color", "#89b4fa")
         accent_btn.setStyleSheet(
-            f"background: {accent_color}; border: 1px solid #3a4050; "
+            f"background: {accent_color}; border: 1px solid #45475a; "
             f"border-radius: 4px; min-width: 60px; min-height: 24px;"
         )
         accent_btn.setProperty("color_value", accent_color)
@@ -270,17 +272,17 @@ class SettingsDialog(QDialog):
     @staticmethod
     def _add_description(form: QFormLayout, text: str) -> None:
         desc = QLabel(text)
-        desc.setStyleSheet("color: #6a7280; font-size: 10px;")
+        desc.setStyleSheet("color: #a6adc8; font-size: 10px;")
         form.addRow("", desc)
 
     @staticmethod
     def _pick_color(button: QPushButton) -> None:
-        current = QColor(button.property("color_value") or "#1a6fff")
+        current = QColor(button.property("color_value") or "#89b4fa")
         color = QColorDialog.getColor(current, button, "Select Accent Color")
         if color.isValid():
             button.setProperty("color_value", color.name())
             button.setStyleSheet(
-                f"background: {color.name()}; border: 1px solid #3a4050; "
+                f"background: {color.name()}; border: 1px solid #45475a; "
                 f"border-radius: 4px; min-width: 60px; min-height: 24px;"
             )
 

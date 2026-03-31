@@ -26,6 +26,10 @@ def _ensure_mpl_config_dir() -> None:
 
 _ensure_mpl_config_dir()
 
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
+
+apply_mpl_defaults()
+
 from matplotlib.figure import Figure
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import (
@@ -153,7 +157,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Kronos 2026.1")
         self.setMinimumSize(1280, 800)
         self.settings_manager = SettingsManager()
-        self._current_theme = self.settings_manager.get("appearance/theme", "light")
+        self._current_theme = "dark"
+        self.settings_manager.set("appearance/theme", self._current_theme)
         apply_stylesheet(QApplication.instance(), self._current_theme)
         # MATLAB-style external figure windows (disable integrated figures panel).
         self._integrated_figures_enabled = False
@@ -724,12 +729,13 @@ class MainWindow(QMainWindow):
             self._outer_splitter.setSizes([int(total * 0.75), total - int(total * 0.75)])
 
     def _toggle_theme(self) -> None:
-        self._current_theme = "light" if self._current_theme == "dark" else "dark"
-        self.settings_manager.set("appearance/theme", self._current_theme)
+        self._current_theme = "dark"
+        self.settings_manager.set("appearance/theme", "dark")
         apply_stylesheet(QApplication.instance(), self._current_theme)
         self.ribbon.set_theme_icon(self._current_theme)
         self.ribbon.refresh_theme()
         self._sync_panel_themes()
+        self.status.showMessage("Theme is locked to Catppuccin Mocha (dark only).", 2800)
 
     def _reset_layout(self) -> None:
         self._main_splitter.setSizes([250, 780, 250])
@@ -920,13 +926,14 @@ class MainWindow(QMainWindow):
 
     def _on_settings_changed(self, changes: dict) -> None:
         if "appearance/theme" in changes:
-            new_theme = changes["appearance/theme"]
+            new_theme = "dark"
             if new_theme != self._current_theme:
                 self._current_theme = new_theme
                 apply_stylesheet(QApplication.instance(), self._current_theme)
                 self.ribbon.set_theme_icon(self._current_theme)
                 self.ribbon.refresh_theme()
                 self._sync_panel_themes()
+            self.settings_manager.set("appearance/theme", "dark")
         self.status.showMessage("Settings applied", 2000)
 
     def _rebuild_recent_menu(self) -> None:
@@ -951,23 +958,13 @@ class MainWindow(QMainWindow):
         self._rebuild_recent_menu()
 
     def _on_simulation_complete(self, result: dict) -> None:
-        is_dark = self._current_theme == "dark"
-        if is_dark:
-            fig_face = "#08090e"
-            ax_face = "#08090e"
-            line_color = "#1a6fff"
-            tick_color = "#3a4050"
-            spine_color = "#1e2128"
-            grid_color = "#1a1f2a"
-            title_color = "#6a7280"
-        else:
-            fig_face = "#ffffff"
-            ax_face = "#ffffff"
-            line_color = "#1a6fff"
-            tick_color = "#475569"
-            spine_color = "#cbd5e1"
-            grid_color = "#e2e8f0"
-            title_color = "#334155"
+        fig_face = "#1e1e2e"
+        ax_face = "#1e1e2e"
+        line_color = "#89b4fa"
+        tick_color = "#a6adc8"
+        spine_color = "#45475a"
+        grid_color = "#313244"
+        title_color = "#cdd6f4"
 
         for scope_id, signal in result["outputs"].items():
             fig = Figure(facecolor=fig_face)

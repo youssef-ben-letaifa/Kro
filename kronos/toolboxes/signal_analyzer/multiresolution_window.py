@@ -20,11 +20,14 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from .preprocessing_engine import PreprocessingEngine
 from .signal_store import SignalStore
+
+apply_mpl_defaults()
 
 
 class MultiResolutionWindow(QMainWindow):
@@ -49,10 +52,13 @@ class MultiResolutionWindow(QMainWindow):
     def _build_multires_tab(self) -> QWidget:
         page = QWidget()
         root = QVBoxLayout(page)
+        root.setContentsMargins(12, 8, 12, 8)
+        root.setSpacing(6)
 
         toolbar = QWidget()
         toolbar_layout = QHBoxLayout(toolbar)
-        toolbar_layout.setContentsMargins(6, 4, 6, 4)
+        toolbar_layout.setContentsMargins(12, 8, 12, 8)
+        toolbar_layout.setSpacing(6)
 
         self.signal_combo = QComboBox()
         self.method_combo = QComboBox()
@@ -80,6 +86,8 @@ class MultiResolutionWindow(QMainWindow):
 
         left = QWidget()
         left_layout = QVBoxLayout(left)
+        left_layout.setContentsMargins(12, 8, 12, 8)
+        left_layout.setSpacing(6)
         self.run_tree = QTreeWidget()
         self.run_tree.setHeaderLabels(["Name", "Method"])
         self.level_table = QTableWidget(0, 5)
@@ -89,14 +97,22 @@ class MultiResolutionWindow(QMainWindow):
 
         center = QWidget()
         center_layout = QVBoxLayout(center)
+        center_layout.setContentsMargins(12, 8, 12, 8)
+        center_layout.setSpacing(6)
         self.decomp_figure = Figure(figsize=(6.0, 6.0), dpi=100)
+        self.decomp_figure.set_facecolor("#0d0d1a")
         self.decomp_canvas = FigureCanvas(self.decomp_figure)
+        self.decomp_canvas.setStyleSheet("background-color: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 6px;")
         center_layout.addWidget(self.decomp_canvas)
 
         right = QWidget()
         right_layout = QVBoxLayout(right)
+        right_layout.setContentsMargins(12, 8, 12, 8)
+        right_layout.setSpacing(6)
         self.recon_figure = Figure(figsize=(4.0, 4.0), dpi=100)
+        self.recon_figure.set_facecolor("#0d0d1a")
         self.recon_canvas = FigureCanvas(self.recon_figure)
+        self.recon_canvas.setStyleSheet("background-color: #0d0d1a; border: 1px solid #2a2a4a; border-radius: 6px;")
         right_layout.addWidget(self.recon_canvas)
 
         splitter.addWidget(left)
@@ -111,6 +127,8 @@ class MultiResolutionWindow(QMainWindow):
     def _build_ewt_tab(self) -> QWidget:
         page = QWidget()
         layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(6)
         layout.addWidget(QLabel("EWT controls are available in the full release build."))
         return page
 
@@ -164,17 +182,19 @@ class MultiResolutionWindow(QMainWindow):
 
         for idx, detail in enumerate(details, start=1):
             ax = self.decomp_figure.add_subplot(total, 1, idx)
-            ax.plot(x[: detail.size], detail, color="#4cc9f0", linewidth=0.9)
+            ax.plot(x[: detail.size], detail, color="#89b4fa", linewidth=0.9)
             ax.set_ylabel(f"D{idx}")
-            ax.grid(True, alpha=0.35)
+            ax.grid(True, alpha=0.35, color="#313244")
+            self._style_axis(ax)
 
         ax_a = self.decomp_figure.add_subplot(total, 1, total)
-        ax_a.plot(x[: approx.size], approx, color="#f72585", linewidth=1.0)
+        ax_a.plot(x[: approx.size], approx, color="#cba6f7", linewidth=1.0)
         ax_a.set_ylabel("A")
         ax_a.set_xlabel("Samples")
-        ax_a.grid(True, alpha=0.35)
+        ax_a.grid(True, alpha=0.35, color="#313244")
+        self._style_axis(ax_a)
 
-        self.decomp_figure.suptitle(f"Decomposition - {name}")
+        self.decomp_figure.suptitle(f"Decomposition - {name}", color="#cdd6f4")
         self.decomp_canvas.draw_idle()
 
         self.recon_figure.clear()
@@ -184,10 +204,22 @@ class MultiResolutionWindow(QMainWindow):
         reconstructed[: approx.size] += approx
         for detail in details:
             reconstructed[: detail.size] += detail
-        ax.plot(reconstructed, color="#4daf4a", linewidth=1.2, label="Reconstruction")
+        ax.plot(reconstructed, color="#a6e3a1", linewidth=1.2, label="Reconstruction")
         ax.legend()
-        ax.grid(True, alpha=0.35)
+        ax.grid(True, alpha=0.35, color="#313244")
+        self._style_axis(ax)
         self.recon_canvas.draw_idle()
+
+    @staticmethod
+    def _style_axis(ax) -> None:
+        ax.set_facecolor("#0d0d1a")
+        ax.tick_params(colors="#6c7086", labelsize=9)
+        ax.xaxis.label.set_color("#6c7086")
+        ax.yaxis.label.set_color("#6c7086")
+        ax.title.set_color("#a0b0d0")
+        ax.title.set_fontsize(10)
+        for spine in ax.spines.values():
+            spine.set_color("#2a2a4a")
 
     def _populate_level_table(self, fs: float, details: list[np.ndarray], approx: np.ndarray) -> None:
         energies = [float(np.sum(d * d)) for d in details] + [float(np.sum(approx * approx))]

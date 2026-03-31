@@ -38,6 +38,7 @@ from PyQt6.QtWidgets import (
     QDoubleSpinBox,
     QFileDialog,
     QFrame,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -52,10 +53,13 @@ from PyQt6.QtWidgets import (
 
 from kronos.ui.theme.design_tokens import get_colors
 from kronos.ui.theme.fluent_icons import icon_for
+from kronos.ui.theme.mpl_defaults import apply_mpl_defaults
 
 from .core import AutonomousDrivingSimulation
 from .core.common import SimulationFrame, VehicleState
 from .opengl_view import OpenGLHighwayView
+
+apply_mpl_defaults()
 
 
 class _RibbonGroup(QFrame):
@@ -63,26 +67,52 @@ class _RibbonGroup(QFrame):
 
     def __init__(self, title: str) -> None:
         super().__init__()
-        self.setObjectName("adt_ribbon_group")
+        self.setObjectName("ribbon_group")
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(6, 4, 6, 3)
+        layout.setContentsMargins(8, 6, 8, 4)
         layout.setSpacing(2)
 
-        self.row = QHBoxLayout()
-        self.row.setContentsMargins(0, 0, 0, 0)
-        self.row.setSpacing(6)
-        layout.addLayout(self.row, 1)
+        self.grid = QGridLayout()
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.setHorizontalSpacing(4)
+        self.grid.setVerticalSpacing(4)
+        layout.addLayout(self.grid, 1)
+        self._has_primary = False
+        self._secondary_index = 0
+        self._max_col = 0
 
         label = QLabel(title)
-        label.setObjectName("adt_ribbon_title")
+        label.setObjectName("ribbon_group_title")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(label)
 
+    @staticmethod
+    def _compactify(button: QToolButton) -> None:
+        button.setObjectName("ribbon_action_compact")
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        button.setIconSize(QSize(16, 16))
+        button.setMinimumSize(116, 28)
+        button.setMaximumHeight(28)
+
     def add_widget(self, widget: QWidget) -> None:
-        self.row.addWidget(widget)
+        if isinstance(widget, QToolButton):
+            if widget.objectName() == "ribbon_action_primary" and not self._has_primary:
+                self.grid.addWidget(widget, 0, 0, 2, 1)
+                self._has_primary = True
+                self._max_col = max(self._max_col, 0)
+                return
+            if widget.objectName() == "ribbon_action_primary":
+                self._compactify(widget)
+
+        start_col = 1 if self._has_primary else 0
+        row = self._secondary_index % 2
+        col = start_col + (self._secondary_index // 2)
+        self.grid.addWidget(widget, row, col)
+        self._secondary_index += 1
+        self._max_col = max(self._max_col, col)
 
     def finalize(self) -> None:
-        self.row.addStretch(1)
+        self.grid.setColumnStretch(self._max_col + 1, 1)
 
 
 class AutonomousDrivingToolboxWindow(QMainWindow):
@@ -114,12 +144,12 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
     def _build_ui(self) -> None:
         root = QWidget()
         root_layout = QVBoxLayout(root)
-        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setContentsMargins(12, 8, 12, 8)
         root_layout.setSpacing(0)
 
         self._name_bar = QWidget()
         name_layout = QHBoxLayout(self._name_bar)
-        name_layout.setContentsMargins(10, 4, 10, 4)
+        name_layout.setContentsMargins(12, 8, 12, 8)
         name_layout.setSpacing(8)
 
         self._title_label = QLabel("Autonomous Driving Toolbox | Scenario: Highway Lane Following")
@@ -164,7 +194,7 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
 
         self._bottom_bar = QWidget()
         bottom_layout = QHBoxLayout(self._bottom_bar)
-        bottom_layout.setContentsMargins(10, 4, 10, 4)
+        bottom_layout.setContentsMargins(12, 8, 12, 8)
         self._time_label = QLabel("t = 0.00 s")
         self._speed_label = QLabel("v = 0.00 m/s")
         self._lane_label = QLabel("lane offset = 0.00 m")
@@ -181,9 +211,11 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
 
     def _build_ribbon(self) -> QWidget:
         panel = QWidget()
-        panel.setObjectName("adt_ribbon")
+        panel.setObjectName("ribbon")
+        panel.setMinimumHeight(172)
+        panel.setMaximumHeight(214)
         row = QHBoxLayout(panel)
-        row.setContentsMargins(8, 4, 8, 4)
+        row.setContentsMargins(12, 8, 12, 8)
         row.setSpacing(6)
 
         sim_group = _RibbonGroup("SIMULATE")
@@ -191,10 +223,10 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
         self._step_btn = self._action_button("Step", "forward", "Run one simulation step")
         self._run_btn = self._action_button("Run", "run", "Start continuous simulation")
         self._pause_btn = self._action_button("Pause", "stop", "Pause simulation")
-        sim_group.add_widget(self._reset_btn)
-        sim_group.add_widget(self._step_btn)
         sim_group.add_widget(self._run_btn)
         sim_group.add_widget(self._pause_btn)
+        sim_group.add_widget(self._step_btn)
+        sim_group.add_widget(self._reset_btn)
         sim_group.finalize()
         row.addWidget(sim_group)
 
@@ -322,17 +354,18 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
 
     def _action_button(self, text: str, icon_name: str, tooltip: str) -> QToolButton:
         btn = QToolButton()
-        btn.setObjectName("adt_action")
+        btn.setObjectName("ribbon_action_primary")
         btn.setText(text)
         btn.setToolTip(tooltip)
         btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        btn.setIconSize(QSize(20, 20))
-        btn.setMinimumSize(68, 50)
+        btn.setIconSize(QSize(22, 22))
+        btn.setMinimumSize(52, 56)
         self._icon_buttons.append((btn, icon_name))
         return btn
 
     def set_theme(self, theme: str) -> None:
-        self._theme = theme if theme in {"dark", "light"} else "dark"
+        del theme
+        self._theme = "dark"
         self._colors = get_colors(self._theme)
         c = self._colors
 
@@ -346,23 +379,6 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
         )
 
         self.setStyleSheet(
-            "QWidget#adt_ribbon {"
-            f" background: {c['ribbon_bottom']};"
-            f" border-bottom: 1px solid {c['ribbon_tab_border']};"
-            "}"
-            "QFrame#adt_ribbon_group {"
-            f" border: 1px solid {c['border']};"
-            " border-radius: 4px;"
-            f" background: {c['bg_secondary']};"
-            "}"
-            "QLabel#adt_ribbon_title {"
-            f" color: {c['text_secondary']};"
-            " font-size: 9px;"
-            " font-weight: 600;"
-            "}"
-            "QToolButton#adt_action {"
-            f" color: {c['text_primary']};"
-            "}"
             "QLabel#adt_title {"
             f" color: {c['text_primary']};"
             " font-size: 12px;"
@@ -375,6 +391,21 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
             "QLabel#adt_metric {"
             f" color: {c['text_secondary']};"
             "}"
+            "QCheckBox {"
+            f" color: {c['text_secondary']};"
+            " spacing: 5px;"
+            "}"
+            "QCheckBox::indicator {"
+            " width: 14px;"
+            " height: 14px;"
+            f" border: 1px solid {c['border']};"
+            " border-radius: 3px;"
+            f" background: {c['bg_primary']};"
+            "}"
+            "QCheckBox::indicator:checked {"
+            f" background: {c['accent']};"
+            f" border-color: {c['accent_hover']};"
+            "}"
             "QTabWidget#adt_tabs::pane {"
             f" border: 1px solid {c['border']};"
             " border-radius: 5px;"
@@ -383,7 +414,8 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
 
         icon_color = c["text_primary"]
         for btn, icon_name in self._icon_buttons:
-            btn.setIcon(icon_for(icon_name, size=20, color=icon_color))
+            icon_size = 22 if btn.objectName() == "ribbon_action_primary" else 16
+            btn.setIcon(icon_for(icon_name, size=icon_size, color=icon_color))
 
         self._gl_view.set_theme(self._theme)
         self._render(self.frame)
@@ -472,7 +504,7 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
         x_max = ego.x + 100.0
         xs = np.linspace(x_min, x_max, 220)
 
-        lane_colors = ("#141b37", "#18224a") if self._theme == "dark" else ("#edf3ff", "#e7efff")
+        lane_colors = ("#1e1e2e", "#181825")
         for lane_idx in range(len(self.sim.road.lane_centers)):
             yc = np.array([self.sim.road.lane_center(lane_idx, float(x)) for x in xs], dtype=float)
             half = 0.5 * self.sim.road.lane_width(lane_idx)
@@ -483,19 +515,19 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
             ys = [self.sim.road.lane_markings(float(x))[mark_idx] for x in xs]
             ls = "-" if mark_idx in {0, len(first_marks) - 1} else "--"
             lw = 1.6 if ls == "-" else 1.0
-            ax.plot(xs, ys, linestyle=ls, linewidth=lw, color="#f5d742", alpha=0.85)
+            ax.plot(xs, ys, linestyle=ls, linewidth=lw, color="#f9e2af", alpha=0.85)
 
         if frame.global_path:
             gp = np.asarray(frame.global_path, dtype=float)
-            ax.plot(gp[:, 0], gp[:, 1], color="#38c2c2", linewidth=1.2, alpha=0.7, label="Global path")
+            ax.plot(gp[:, 0], gp[:, 1], color="#94e2d5", linewidth=1.2, alpha=0.72, label="Global path")
 
         if frame.trajectory:
             tr = np.asarray(frame.trajectory, dtype=float)
-            ax.plot(tr[:, 0], tr[:, 1], color="#6fbcff", linewidth=2.0, label="Local trajectory")
+            ax.plot(tr[:, 0], tr[:, 1], color="#89b4fa", linewidth=2.0, label="Local trajectory")
 
         for veh in frame.vehicles:
-            self._draw_vehicle_2d(ax, veh, "#c96f6f")
-        self._draw_vehicle_2d(ax, frame.ego, "#4f87ff")
+            self._draw_vehicle_2d(ax, veh, "#f38ba8")
+        self._draw_vehicle_2d(ax, frame.ego, "#89b4fa")
 
         if frame.lidar_points:
             pts = np.array(
@@ -506,18 +538,18 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
                 dtype=float,
             )
             if pts.size:
-                ax.scatter(pts[:, 0], pts[:, 1], s=5.0, c="#8dd4ff", alpha=0.5, label="LiDAR")
+                ax.scatter(pts[:, 0], pts[:, 1], s=5.0, c="#89dceb", alpha=0.5, label="LiDAR")
 
         for det in frame.radar_detections:
             x_rel = det.depth * np.cos(det.azimuth)
             y_rel = det.depth * np.sin(det.azimuth)
             gx, gy = self.sim.road.to_global_frame(ego.x, ego.y, ego.yaw, x_rel, y_rel)
-            ax.plot([ego.x, gx], [ego.y, gy], color="#ff9359", linewidth=0.9, alpha=0.55)
+            ax.plot([ego.x, gx], [ego.y, gy], color="#fab387", linewidth=0.9, alpha=0.55)
 
         if frame.fused_objects:
             for obj in frame.fused_objects:
-                ax.scatter(obj.x, obj.y, s=22.0, c="#84f0a0", edgecolors="#1f7d34", linewidths=0.6)
-                ax.text(obj.x + 0.6, obj.y + 0.35, f"T{obj.track_id}", fontsize=7, color="#9be8b1")
+                ax.scatter(obj.x, obj.y, s=22.0, c="#a6e3a1", edgecolors="#94e2d5", linewidths=0.6)
+                ax.text(obj.x + 0.6, obj.y + 0.35, f"T{obj.track_id}", fontsize=7, color="#a6e3a1")
 
         bounds = self.sim.road.lane_bounds(ego.x)
         y_lo = min(b[0] for b in bounds) - 2.0
@@ -527,8 +559,8 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
         ax.set_xlabel("X (m)")
         ax.set_ylabel("Y (m)")
         ax.set_title("Bird's-Eye Simulation")
-        ax.grid(True, color="#5f6980", linewidth=0.35, alpha=0.35)
-        ax.set_facecolor("#0e1222" if self._theme == "dark" else "#f7f9ff")
+        ax.grid(True, color="#45475a", linewidth=0.35, alpha=0.35)
+        ax.set_facecolor("#1e1e2e")
         self._fig2d.tight_layout(pad=1.0)
         self._canvas2d.draw_idle()
 
@@ -539,14 +571,9 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
         cam_ax = self._ax_camera
         local_ax = self._ax_sensor
 
-        if self._theme == "dark":
-            cam_bg = "#080b16"
-            fg = "#cdd6f7"
-            local_bg = "#0d1224"
-        else:
-            cam_bg = "#f8fbff"
-            fg = "#334155"
-            local_bg = "#f4f8ff"
+        cam_bg = "#1e1e2e"
+        fg = "#cdd6f4"
+        local_bg = "#181825"
 
         cam_w = float(self.sim.sensor_config.camera_width)
         cam_h = float(self.sim.sensor_config.camera_height)
@@ -565,11 +592,11 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
                 det.bbox_w,
                 det.bbox_h,
                 linewidth=1.2,
-                edgecolor="#6fbcff",
+                edgecolor="#89b4fa",
                 facecolor="none",
             )
             cam_ax.add_patch(rect)
-            cam_ax.text(u0, max(12.0, v0 - 4.0), det.actor_id, color="#8fd7ff", fontsize=7)
+            cam_ax.text(u0, max(12.0, v0 - 4.0), det.actor_id, color="#89dceb", fontsize=7)
 
         local_ax.set_facecolor(local_bg)
         local_ax.set_title("LiDAR / Radar / Tracks (ego frame)")
@@ -582,24 +609,24 @@ class AutonomousDrivingToolboxWindow(QMainWindow):
         if frame.lidar_points:
             x = [p.x_rel for p in frame.lidar_points]
             y = [p.y_rel for p in frame.lidar_points]
-            local_ax.scatter(x, y, s=4.0, c="#7dc9ff", alpha=0.55, label="LiDAR")
+            local_ax.scatter(x, y, s=4.0, c="#89dceb", alpha=0.55, label="LiDAR")
 
         if frame.radar_detections:
             rx = [d.depth * np.cos(d.azimuth) for d in frame.radar_detections]
             ry = [d.depth * np.sin(d.azimuth) for d in frame.radar_detections]
-            local_ax.scatter(rx, ry, s=24.0, marker="x", c="#ff8a5b", label="Radar")
+            local_ax.scatter(rx, ry, s=24.0, marker="x", c="#fab387", label="Radar")
 
         ego = frame.ego
         for obj in frame.fused_objects:
             x_rel, y_rel = self.sim.road.to_local_frame(ego.x, ego.y, ego.yaw, obj.x, obj.y)
-            local_ax.scatter([x_rel], [y_rel], s=26.0, c="#84f0a0", edgecolors="#286f32", linewidths=0.6)
+            local_ax.scatter([x_rel], [y_rel], s=26.0, c="#a6e3a1", edgecolors="#94e2d5", linewidths=0.6)
 
-        local_ax.plot([0.0], [0.0], marker=(3, 0, -90), markersize=11, color="#4f87ff", label="Ego")
+        local_ax.plot([0.0], [0.0], marker=(3, 0, -90), markersize=11, color="#89b4fa", label="Ego")
         local_ax.legend(loc="upper right", fontsize=8)
 
         for axis in (cam_ax, local_ax):
             for spine in axis.spines.values():
-                spine.set_color("#73809d" if self._theme == "dark" else "#a8b7d6")
+                spine.set_color("#45475a")
             axis.tick_params(colors=fg)
             axis.title.set_color(fg)
             axis.xaxis.label.set_color(fg)

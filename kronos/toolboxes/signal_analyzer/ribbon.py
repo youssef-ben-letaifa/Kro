@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from pathlib import Path
 from typing import Final
 
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QTabWidget,
@@ -18,30 +17,13 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-_ICON_ROOT: Final[Path] = Path(__file__).resolve().parents[2] / "assets" / "icons" / "fluent"
-_ICON_FILES: Final[dict[str, str]] = {
-    "new": "ic_fluent_document_add_24_regular.svg",
-    "open": "ic_fluent_folder_open_24_regular.svg",
-    "save": "ic_fluent_save_24_regular.svg",
-    "grid": "ic_fluent_grid_24_regular.svg",
-    "workspace": "ic_fluent_table_simple_24_regular.svg",
-    "settings": "ic_fluent_settings_24_regular.svg",
-    "plot": "ic_fluent_chart_multiple_24_regular.svg",
-    "signal": "ic_fluent_line_24_regular.svg",
-    "analysis": "ic_fluent_data_bar_horizontal_24_regular.svg",
-    "undo": "ic_fluent_arrow_undo_24_regular.svg",
-    "clear": "ic_fluent_eraser_24_regular.svg",
-    "run": "ic_fluent_play_24_regular.svg",
-    "stop": "ic_fluent_stop_24_regular.svg",
-    "code": "ic_fluent_code_24_regular.svg",
-    "toolbox": "ic_fluent_library_24_regular.svg",
-}
+from kronos.ui.theme.fluent_icons import icon_for
 
 _ACTION_ICON: Final[dict[str, str]] = {
     "new_session": "new",
     "open_session": "open",
     "save_session": "save",
-    "display_grid": "grid",
+    "display_grid": "layout",
     "toggle_signal_table": "workspace",
     "toggle_workspace": "workspace",
     "toggle_measurements": "analysis",
@@ -49,7 +31,7 @@ _ACTION_ICON: Final[dict[str, str]] = {
     "export_signal": "save",
     "duplicate_signal": "new",
     "delete_signal": "clear",
-    "smooth": "signal",
+    "smooth": "plot",
     "quick_lowpass": "analysis",
     "quick_highpass": "analysis",
     "quick_bandpass": "analysis",
@@ -66,7 +48,7 @@ _ACTION_ICON: Final[dict[str, str]] = {
     "zoom_out": "analysis",
     "pan": "analysis",
     "reset_view": "undo",
-    "view_time": "signal",
+    "view_time": "plot",
     "view_spectrum": "plot",
     "view_spectrogram": "plot",
     "view_scalogram": "plot",
@@ -85,16 +67,16 @@ _ACTION_ICON: Final[dict[str, str]] = {
     "measure_select_all": "analysis",
     "measure_deselect_all": "clear",
     "measure_export_csv": "save",
-    "smooth_ma": "signal",
-    "smooth_gaussian": "signal",
-    "smooth_savgol": "signal",
-    "smooth_lowess": "signal",
-    "smooth_robust_lowess": "signal",
+    "smooth_ma": "plot",
+    "smooth_gaussian": "plot",
+    "smooth_savgol": "plot",
+    "smooth_lowess": "plot",
+    "smooth_robust_lowess": "plot",
     "smooth_preview": "run",
     "smooth_apply": "run",
     "smooth_undo": "undo",
-    "time_amplitude": "signal",
-    "time_envelope": "signal",
+    "time_amplitude": "plot",
+    "time_envelope": "plot",
     "time_inst_freq": "analysis",
     "time_inst_phase": "analysis",
     "trace_width": "settings",
@@ -103,17 +85,64 @@ _ACTION_ICON: Final[dict[str, str]] = {
 }
 
 
-def _icon_for_action(action_id: str) -> QIcon:
+def _icon_for_action(action_id: str):
     key = _ACTION_ICON.get(action_id)
     if key is None:
-        return QIcon()
-    filename = _ICON_FILES.get(key)
-    if filename is None:
-        return QIcon()
-    path = _ICON_ROOT / filename
-    if not path.exists():
-        return QIcon()
-    return QIcon(str(path))
+        return icon_for("analysis", size=20, color="#a6adc8")
+    return icon_for(key, size=20, color="#cdd6f4")
+
+
+class _RibbonSection(QFrame):
+    """Word-like ribbon section with one hero command and compact actions."""
+
+    def __init__(self, title: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setObjectName("ribbon_group")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 6, 8, 4)
+        layout.setSpacing(2)
+
+        self.grid = QGridLayout()
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.setHorizontalSpacing(4)
+        self.grid.setVerticalSpacing(4)
+        layout.addLayout(self.grid, 1)
+        self._has_primary = False
+        self._secondary_index = 0
+        self._max_col = 0
+
+        footer = QLabel(title)
+        footer.setObjectName("ribbon_group_title")
+        footer.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(footer)
+
+    @staticmethod
+    def _compactify(button: QToolButton) -> None:
+        button.setObjectName("ribbon_action_compact")
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        button.setIconSize(QSize(16, 16))
+        button.setMinimumSize(116, 28)
+        button.setMaximumHeight(28)
+
+    def add_button(self, button: QToolButton) -> None:
+        if button.objectName() == "ribbon_action_primary" and not self._has_primary:
+            self.grid.addWidget(button, 0, 0, 2, 1)
+            self._has_primary = True
+            self._max_col = max(self._max_col, 0)
+            return
+
+        if button.objectName() == "ribbon_action_primary":
+            self._compactify(button)
+
+        start_col = 1 if self._has_primary else 0
+        row = self._secondary_index % 2
+        col = start_col + (self._secondary_index // 2)
+        self.grid.addWidget(button, row, col)
+        self._secondary_index += 1
+        self._max_col = max(self._max_col, col)
+
+    def finalize(self) -> None:
+        self.grid.setColumnStretch(self._max_col + 1, 1)
 
 
 class Ribbon(QWidget):
@@ -123,14 +152,14 @@ class Ribbon(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setObjectName("sa_ribbon")
+        self.setObjectName("ribbon")
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
         self.tabs = QTabWidget()
-        self.tabs.setObjectName("sa_ribbon_tabs")
+        self.tabs.setObjectName("ribbon_tabs")
         self.tabs.setDocumentMode(True)
         bar = self.tabs.tabBar()
         if bar is not None:
@@ -224,49 +253,38 @@ class Ribbon(QWidget):
 
     def _build_tab(self, sections: Iterable[tuple[str, list[tuple[str, str]]]]) -> QWidget:
         page = QWidget()
-        page.setObjectName("sa_ribbon_page")
+        page.setObjectName("ribbon_panel")
+        sections_list = list(sections)
 
         row = QHBoxLayout(page)
-        row.setContentsMargins(10, 8, 10, 8)
-        row.setSpacing(8)
+        row.setContentsMargins(12, 8, 12, 8)
+        row.setSpacing(6)
 
-        for section_idx, (section_name, buttons) in enumerate(sections):
-            if section_idx > 0:
-                separator = QFrame()
-                separator.setObjectName("sa_ribbon_separator")
-                separator.setFrameShape(QFrame.Shape.VLine)
-                separator.setFrameShadow(QFrame.Shadow.Plain)
-                row.addWidget(separator)
+        for idx_section, (section_name, buttons) in enumerate(sections_list):
+            section = _RibbonSection(section_name, page)
 
-            section = QFrame()
-            section.setObjectName("sa_ribbon_section")
-            section_layout = QVBoxLayout(section)
-            section_layout.setContentsMargins(4, 2, 4, 2)
-            section_layout.setSpacing(2)
-
-            button_row = QHBoxLayout()
-            button_row.setContentsMargins(0, 0, 0, 0)
-            button_row.setSpacing(2)
-
-            for label, action_id in buttons:
+            for idx, (label, action_id) in enumerate(buttons):
                 btn = QToolButton()
-                btn.setObjectName("sa_ribbon_button")
+                btn.setObjectName("ribbon_action_primary" if idx == 0 else "ribbon_action_compact")
                 btn.setText(label)
                 btn.setToolTip(label)
-                btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+                btn.setToolButtonStyle(
+                    Qt.ToolButtonStyle.ToolButtonTextUnderIcon if idx == 0 else Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+                )
                 btn.setIcon(_icon_for_action(action_id))
-                btn.setIconSize(QSize(20, 20))
-                btn.setMinimumSize(78, 62)
+                btn.setIconSize(QSize(22 if idx == 0 else 16, 22 if idx == 0 else 16))
+                btn.setMinimumSize(52 if idx == 0 else 116, 56 if idx == 0 else 28)
                 btn.clicked.connect(lambda _checked=False, aid=action_id: self.action_triggered.emit(aid))
-                button_row.addWidget(btn)
+                section.add_button(btn)
 
-            footer = QLabel(section_name)
-            footer.setObjectName("sa_ribbon_section_label")
-            footer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-            section_layout.addLayout(button_row)
-            section_layout.addWidget(footer)
+            section.finalize()
             row.addWidget(section)
+            if idx_section < len(sections_list) - 1:
+                sep = QFrame(page)
+                sep.setObjectName("ribbon_divider")
+                sep.setFrameShape(QFrame.Shape.VLine)
+                sep.setFrameShadow(QFrame.Shadow.Plain)
+                row.addWidget(sep)
 
         row.addStretch(1)
         return page

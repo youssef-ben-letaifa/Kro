@@ -23,7 +23,8 @@ class OpenGLHighwayView(QOpenGLWidget):
         self._gl_ready = False
 
     def set_theme(self, theme: str) -> None:
-        self._theme = theme if theme in {"dark", "light"} else "dark"
+        del theme
+        self._theme = "dark"
         self._colors = get_colors(self._theme)
         self.update()
 
@@ -99,8 +100,8 @@ class OpenGLHighwayView(QOpenGLWidget):
         if lane_count == 0:
             return
 
-        lane_fill_a = QColor("#1d2748" if self._theme == "dark" else "#dbe6ff")
-        lane_fill_b = QColor("#25345f" if self._theme == "dark" else "#e8efff")
+        lane_fill_a = QColor("#1e1e2e")
+        lane_fill_b = QColor("#181825")
 
         for lane_idx in range(lane_count):
             width = road.lane_width(lane_idx)
@@ -122,7 +123,7 @@ class OpenGLHighwayView(QOpenGLWidget):
                 painter.drawPolygon(poly)
 
         first_marks = road.lane_markings(float(xs[0]))
-        line_color = QColor("#f5d742")
+        line_color = QColor("#f9e2af")
         for mark_idx in range(len(first_marks)):
             pts: list[QPointF] = []
             for x in xs:

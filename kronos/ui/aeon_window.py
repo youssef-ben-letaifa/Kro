@@ -52,28 +52,55 @@ class _RibbonGroup(QFrame):
         super().__init__()
         self.setObjectName("ribbon_group")
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 4, 8, 2)
-        layout.setSpacing(3)
-        self.row = QHBoxLayout()
-        self.row.setContentsMargins(0, 0, 0, 0)
-        self.row.setSpacing(5)
-        layout.addLayout(self.row, 1)
+        layout.setContentsMargins(8, 6, 8, 4)
+        layout.setSpacing(2)
+        self.grid = QGridLayout()
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.setHorizontalSpacing(4)
+        self.grid.setVerticalSpacing(4)
+        layout.addLayout(self.grid, 1)
+        self._has_primary = False
+        self._secondary_index = 0
+        self._max_col = 0
         label = QLabel(title)
         label.setObjectName("ribbon_group_title")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(label)
 
+    @staticmethod
+    def _compactify(button: QToolButton) -> None:
+        button.setObjectName("ribbon_action_compact")
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        button.setIconSize(QSize(16, 16))
+        button.setMinimumSize(116, 28)
+        button.setMaximumHeight(28)
+
     def add_widget(self, widget: QWidget) -> None:
-        self.row.addWidget(widget)
+        if isinstance(widget, QToolButton):
+            if widget.objectName() == "ribbon_action_primary" and not self._has_primary:
+                self.grid.addWidget(widget, 0, 0, 2, 1)
+                self._has_primary = True
+                self._max_col = max(self._max_col, 0)
+                return
+
+            if widget.objectName() == "ribbon_action_primary":
+                self._compactify(widget)
+
+        start_col = 1 if self._has_primary else 0
+        row = self._secondary_index % 2
+        col = start_col + (self._secondary_index // 2)
+        self.grid.addWidget(widget, row, col)
+        self._secondary_index += 1
+        self._max_col = max(self._max_col, col)
 
     def finalize(self) -> None:
-        self.row.addStretch(1)
+        self.grid.setColumnStretch(self._max_col + 1, 1)
 
 
-def _sim_icon(name: str, color: str | None = None) -> QIcon:
+def _sim_icon(name: str, color: str | None = None, size: int = 22) -> QIcon:
     """Create a Fluent icon for the Aeon ribbon."""
     tint = color or get_colors("dark")["text_primary"]
-    return icon_for(name, size=22, color=tint)
+    return icon_for(name, size=size, color=tint)
 
 
 def _ribbon_button(
@@ -83,17 +110,20 @@ def _ribbon_button(
     icon_role: str = "text_secondary",
     *,
     checkable: bool = False,
+    primary: bool = True,
 ) -> QToolButton:
     base_colors = get_colors("dark")
     icon_color = base_colors.get(icon_role, icon_role)
     btn = QToolButton()
-    btn.setObjectName("ribbon_action")
+    btn.setObjectName("ribbon_action_primary" if primary else "ribbon_action_compact")
     btn.setText(text)
     btn.setToolTip(tooltip)
-    btn.setIcon(_sim_icon(icon_name, icon_color))
-    btn.setIconSize(QSize(22, 22))
-    btn.setMinimumSize(32, 32)
-    btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+    btn.setIcon(_sim_icon(icon_name, icon_color, size=22 if primary else 16))
+    btn.setIconSize(QSize(22 if primary else 16, 22 if primary else 16))
+    btn.setMinimumSize(52 if primary else 116, 56 if primary else 28)
+    btn.setToolButtonStyle(
+        Qt.ToolButtonStyle.ToolButtonTextUnderIcon if primary else Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+    )
     btn.setCheckable(checkable)
     btn.setProperty("icon_name", icon_name)
     btn.setProperty("icon_role", icon_role)
@@ -518,8 +548,8 @@ class AeonWindow(QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Aeon — Kronos 2026.1")
         self.setMinimumSize(1200, 720)
-        parent_theme = getattr(parent, "_current_theme", "light")
-        self._theme = parent_theme if parent_theme in {"dark", "light"} else "light"
+        parent_theme = getattr(parent, "_current_theme", "dark")
+        self._theme = parent_theme if parent_theme in {"dark", "light"} else "dark"
         self._colors = get_colors(self._theme)
 
         self._simulator = DiagramSimulator()
@@ -591,8 +621,8 @@ class AeonWindow(QMainWindow):
     def _build_ribbon(self) -> QWidget:
         ribbon = QWidget()
         ribbon.setObjectName("ribbon")
-        ribbon.setMinimumHeight(130)
-        ribbon.setMaximumHeight(140)
+        ribbon.setMinimumHeight(172)
+        ribbon.setMaximumHeight(208)
         rl = QVBoxLayout(ribbon)
         rl.setContentsMargins(0, 0, 0, 0)
         rl.setSpacing(0)
@@ -611,7 +641,7 @@ class AeonWindow(QMainWindow):
         panel = QWidget()
         panel.setObjectName("ribbon_panel")
         row = QHBoxLayout(panel)
-        row.setContentsMargins(8, 4, 8, 4)
+        row.setContentsMargins(12, 8, 12, 8)
         row.setSpacing(6)
 
         # FILE group
@@ -623,7 +653,6 @@ class AeonWindow(QMainWindow):
         g_file.add_widget(self._save_btn)
         g_file.finalize()
         row.addWidget(g_file)
-        row.addWidget(self._vdiv())
 
         # LIBRARY group
         g_lib = _RibbonGroup("LIBRARY")
@@ -632,7 +661,6 @@ class AeonWindow(QMainWindow):
         g_lib.add_widget(_ribbon_button("Add\nViewer", "Add Signal Viewer", "viewer"))
         g_lib.finalize()
         row.addWidget(g_lib)
-        row.addWidget(self._vdiv())
 
         # SIMULATE group
         g_sim = _RibbonGroup("SIMULATE")
@@ -693,7 +721,6 @@ class AeonWindow(QMainWindow):
         g_sim.add_widget(self._stop_btn)
         g_sim.finalize()
         row.addWidget(g_sim)
-        row.addWidget(self._vdiv())
 
         # TOOLS group
         g_tools = _RibbonGroup("TOOLS")
@@ -707,7 +734,6 @@ class AeonWindow(QMainWindow):
         g_tools.add_widget(self._clear_btn)
         g_tools.finalize()
         row.addWidget(g_tools)
-        row.addWidget(self._vdiv())
 
         # REVIEW RESULTS group
         g_review = _RibbonGroup("REVIEW RESULTS")
@@ -722,7 +748,7 @@ class AeonWindow(QMainWindow):
         panel = QWidget()
         panel.setObjectName("ribbon_panel")
         row = QHBoxLayout(panel)
-        row.setContentsMargins(8, 4, 8, 4)
+        row.setContentsMargins(12, 8, 12, 8)
         row.setSpacing(6)
         g = _RibbonGroup("MODEL")
         g.add_widget(_ribbon_button("Undo", "Undo", "undo"))
@@ -746,7 +772,7 @@ class AeonWindow(QMainWindow):
         panel = QWidget()
         panel.setObjectName("ribbon_panel")
         row = QHBoxLayout(panel)
-        row.setContentsMargins(8, 4, 8, 4)
+        row.setContentsMargins(12, 8, 12, 8)
         lbl = QLabel("Format tools — coming soon")
         lbl.setObjectName("aeon_muted_text")
         row.addWidget(lbl)
@@ -757,7 +783,7 @@ class AeonWindow(QMainWindow):
         panel = QWidget()
         panel.setObjectName("ribbon_panel")
         row = QHBoxLayout(panel)
-        row.setContentsMargins(8, 4, 8, 4)
+        row.setContentsMargins(12, 8, 12, 8)
         lbl = QLabel("Apps — coming soon")
         lbl.setObjectName("aeon_muted_text")
         row.addWidget(lbl)
@@ -796,6 +822,21 @@ class AeonWindow(QMainWindow):
             "}"
         )
         self.setStyleSheet(
+            "QCheckBox {"
+            f" color: {c['text_secondary']};"
+            " spacing: 5px;"
+            "}"
+            "QCheckBox::indicator {"
+            " width: 14px;"
+            " height: 14px;"
+            f" border: 1px solid {c['border']};"
+            " border-radius: 3px;"
+            f" background: {c['bg_primary']};"
+            "}"
+            "QCheckBox::indicator:checked {"
+            f" background: {c['accent']};"
+            f" border-color: {c['accent_hover']};"
+            "}"
             "QLabel#aeon_model_name {"
             f" color: {c['text_primary']};"
             " font-size: 12px;"
@@ -815,12 +856,6 @@ class AeonWindow(QMainWindow):
             f" color: {c['text_secondary']};"
             " font-size: 9px;"
             "}"
-            "QFrame#ribbon_divider {"
-            f" background: {c['ribbon_tab_border']};"
-            "}"
-            "QToolButton#ribbon_action {"
-            f" color: {c['text_primary']};"
-            "}"
         )
         self._library.set_theme(self._theme)
         self.aeon_canvas.set_theme(self._theme)
@@ -833,14 +868,15 @@ class AeonWindow(QMainWindow):
 
     def _refresh_ribbon_icons(self) -> None:
         for btn in self.findChildren(QToolButton):
-            if btn.objectName() != "ribbon_action":
+            if btn.objectName() not in {"ribbon_action_primary", "ribbon_action_compact"}:
                 continue
             icon_name = btn.property("icon_name")
             if not isinstance(icon_name, str) or not icon_name:
                 continue
             icon_role = btn.property("icon_role")
             role_name = icon_role if isinstance(icon_role, str) else "text_secondary"
-            btn.setIcon(_sim_icon(icon_name, self._resolve_icon_tint(role_name)))
+            icon_size = 22 if btn.objectName() == "ribbon_action_primary" else 16
+            btn.setIcon(_sim_icon(icon_name, self._resolve_icon_tint(role_name), size=icon_size))
 
     # ---------------------------------------------------------------
     # Signal connections

@@ -32,10 +32,10 @@ class KronosToolBar(QToolBar):
         self.setFixedHeight(36)
         self.setIconSize(QSize(16, 16))
         self.setStyleSheet(
-            "QToolBar { background: #080c14; border-bottom: 1px solid #1e2128; }"
+            "QToolBar { background: #181825; border-bottom: 1px solid #313244; }"
             "QToolButton { background: transparent; border: none; }"
-            "QToolButton:hover { background: #13192a; border-radius: 4px; }"
-            "QToolButton:checked { background: #1a3a5c; color: #1a6fff; }"
+            "QToolButton:hover { background: #313244; border-radius: 4px; }"
+            "QToolButton:checked { background: #45475a; color: #89b4fa; }"
         )
 
         self._control_buttons: list[QToolButton] = []
@@ -62,7 +62,7 @@ class KronosToolBar(QToolBar):
         button.setToolTip(tooltip)
         button.setAutoRaise(True)
         button.setFixedSize(28, 28)
-        button.setIcon(self._make_icon(symbol, color or QColor("#c8ccd4")))
+        button.setIcon(self._make_icon(symbol, color or QColor("#cdd6f4")))
         button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         return button
 
@@ -78,9 +78,9 @@ class KronosToolBar(QToolBar):
         return QIcon(pixmap)
 
     def _add_exec_group(self) -> None:
-        run = self._make_button("▶", "Run (F5)", QColor("#98c379"))
-        stop = self._make_button("■", "Stop Kernel", QColor("#e06c75"))
-        restart = self._make_button("↺", "Restart Kernel", QColor("#e5c07b"))
+        run = self._make_button("▶", "Run (F5)", QColor("#a6e3a1"))
+        stop = self._make_button("■", "Stop Kernel", QColor("#f38ba8"))
+        restart = self._make_button("↺", "Restart Kernel", QColor("#f9e2af"))
         run.clicked.connect(self.run_requested)
         stop.clicked.connect(self.stop_requested)
         restart.clicked.connect(self.restart_requested)
@@ -126,7 +126,8 @@ class KronosToolBar(QToolBar):
         self.addWidget(symbolic)
 
     def _add_theme_group(self) -> None:
-        self._theme_button = self._make_button("🌙", "Toggle Dark/Light Theme")
+        self._theme_button = self._make_button("🌙", "Catppuccin Mocha (dark-only theme)")
+        self._theme_button.setEnabled(False)
         self._theme_button.clicked.connect(self.theme_toggle_requested)
         self.addWidget(self._theme_button)
 
@@ -137,5 +138,5 @@ class KronosToolBar(QToolBar):
 
     def set_theme_icon(self, theme: str) -> None:
         """Update theme toggle icon based on current theme."""
-        symbol = "🌙" if theme == "dark" else "☀"
-        self._theme_button.setIcon(self._make_icon(symbol, QColor("#c8ccd4")))
+        del theme
+        self._theme_button.setIcon(self._make_icon("🌙", QColor("#cdd6f4")))

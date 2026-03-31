@@ -94,13 +94,13 @@ class ExplorerTree(QTreeWidget):
         ext = Path(filename).suffix.lower()
         if ext not in self._icon_cache:
             if ext == ".py":
-                self._icon_cache[ext] = self._draw_file_icon("#1a6fff", "Py")
+                self._icon_cache[ext] = self._draw_file_icon("#89b4fa", "Py")
             elif ext == ".sim":
-                self._icon_cache[ext] = self._draw_file_icon("#98c379", "Sm")
+                self._icon_cache[ext] = self._draw_file_icon("#a6e3a1", "Sm")
             elif ext == ".qc":
-                self._icon_cache[ext] = self._draw_file_icon("#c678dd", "Qc")
+                self._icon_cache[ext] = self._draw_file_icon("#cba6f7", "Qc")
             else:
-                self._icon_cache[ext] = self._draw_file_icon("#6a7280", "--")
+                self._icon_cache[ext] = self._draw_file_icon("#a6adc8", "--")
         return self._icon_cache[ext]
 
     @staticmethod
@@ -110,12 +110,12 @@ class ExplorerTree(QTreeWidget):
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(QPen(QColor(color), 1.2))
-        painter.setBrush(QColor("#13192a"))
+        painter.setBrush(QColor("#1e1e2e"))
         painter.drawRoundedRect(QRectF(1.5, 1.5, 13, 13), 2.2, 2.2)
         painter.setPen(QColor(color))
         painter.drawLine(10, 2, 14, 5)
         painter.drawLine(10, 2, 10, 5)
-        painter.setPen(QColor("#c8ccd4"))
+        painter.setPen(QColor("#cdd6f4"))
         painter.setFont(painter.font())
         painter.drawText(QRectF(2.0, 6.0, 12.0, 7.0), Qt.AlignmentFlag.AlignCenter, text)
         painter.end()
@@ -127,8 +127,8 @@ class ExplorerTree(QTreeWidget):
         pixmap.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        painter.setPen(QPen(QColor("#8a784c"), 1.2))
-        painter.setBrush(QColor("#3b3522"))
+        painter.setPen(QPen(QColor("#f9e2af"), 1.2))
+        painter.setBrush(QColor("#313244"))
         path = QPainterPath()
         path.moveTo(1.5, 6.0)
         path.lineTo(5.8, 6.0)
@@ -138,7 +138,7 @@ class ExplorerTree(QTreeWidget):
         path.lineTo(1.5, 13.5)
         path.closeSubpath()
         painter.drawPath(path)
-        painter.fillPath(path, QColor("#4a4128"))
+        painter.fillPath(path, QColor("#45475a"))
         painter.end()
         return QIcon(pixmap)
 

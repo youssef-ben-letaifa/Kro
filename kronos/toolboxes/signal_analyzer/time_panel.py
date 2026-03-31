@@ -48,15 +48,15 @@ class TimePanel(PlotPanel):
             if x_reference is None or x.size > x_reference.size:
                 x_reference = x
 
-        self.axes.set_title("Time Domain", color="#e0e0e0", fontsize=10)
-        self.axes.set_xlabel("Time (s)", color="#a0a0b0")
-        self.axes.set_ylabel(visible[0].unit or "Amplitude", color="#a0a0b0")
+        self.axes.set_title("Time Domain", color="#cdd6f4", fontsize=10)
+        self.axes.set_xlabel("Time (s)", color="#a6adc8")
+        self.axes.set_ylabel(visible[0].unit or "Amplitude", color="#a6adc8")
         if self._show_legend:
             self.axes.legend(loc="upper right", fontsize=8, facecolor="#101827", edgecolor="#334155")
 
         roi = self._store.roi()
         if roi is not None:
-            self.axes.axvspan(roi[0], roi[1], color="#4cc9f0", alpha=0.15)
+            self.axes.axvspan(roi[0], roi[1], color="#89b4fa", alpha=0.16)
 
         if x_reference is not None:
             self.cursors.set_series(x_reference, series_map)
