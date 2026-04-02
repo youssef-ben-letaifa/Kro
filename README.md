@@ -1,5 +1,5 @@
 # Kronos IDE
-
+![Kronos ](loading.png)
 Kronos is an open-source scientific IDE and simulation environment built as a Python-native alternative to MATLAB workflows.
 
 It combines:
