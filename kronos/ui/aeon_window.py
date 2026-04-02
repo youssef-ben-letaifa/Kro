@@ -554,6 +554,7 @@ class AeonWindow(QMainWindow):
 
         self._simulator = DiagramSimulator()
         self._sim_thread: QThread | None = None
+        self._sim_worker: _SimulationWorker | None = None
 
         self.aeon_canvas = AeonCanvas()
         self.aeon_canvas.set_theme(self._theme)
@@ -664,6 +665,17 @@ class AeonWindow(QMainWindow):
 
         # SIMULATE group
         g_sim = _RibbonGroup("SIMULATE")
+        self._run_btn = _ribbon_button("Run", "Run Simulation (F5)", "run", "success")
+        self._stop_btn = _ribbon_button(
+            "Stop",
+            "Stop Simulation",
+            "stop",
+            "error",
+            primary=False,
+        )
+        g_sim.add_widget(self._run_btn)
+        g_sim.add_widget(self._stop_btn)
+
         # Stop Time
         time_w = QWidget()
         time_l = QVBoxLayout(time_w)
@@ -673,10 +685,11 @@ class AeonWindow(QMainWindow):
         st_lbl.setObjectName("aeon_small_label")
         st_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._t_end_spin = QDoubleSpinBox()
+        self._t_end_spin.setObjectName("aeon_sim_spin")
         self._t_end_spin.setRange(0.0, 10000.0)
         self._t_end_spin.setValue(10.0)
         self._t_end_spin.setSingleStep(0.5)
-        self._t_end_spin.setFixedWidth(70)
+        self._t_end_spin.setFixedWidth(92)
         time_l.addWidget(st_lbl)
         time_l.addWidget(self._t_end_spin)
         g_sim.add_widget(time_w)
@@ -690,8 +703,9 @@ class AeonWindow(QMainWindow):
         sv_lbl.setObjectName("aeon_small_label")
         sv_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._solver_combo = QComboBox()
+        self._solver_combo.setObjectName("aeon_solver_combo")
         self._solver_combo.addItems(["Normal", "Accelerator", "Rapid Accelerator"])
-        self._solver_combo.setFixedWidth(100)
+        self._solver_combo.setFixedWidth(138)
         solver_l.addWidget(sv_lbl)
         solver_l.addWidget(self._solver_combo)
         g_sim.add_widget(solver_w)
@@ -705,20 +719,15 @@ class AeonWindow(QMainWindow):
         dt_lbl.setObjectName("aeon_small_label")
         dt_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._dt_spin = QDoubleSpinBox()
+        self._dt_spin.setObjectName("aeon_sim_spin")
         self._dt_spin.setRange(0.001, 1.0)
         self._dt_spin.setDecimals(3)
         self._dt_spin.setValue(0.01)
         self._dt_spin.setSingleStep(0.001)
-        self._dt_spin.setFixedWidth(70)
+        self._dt_spin.setFixedWidth(92)
         dt_l.addWidget(dt_lbl)
         dt_l.addWidget(self._dt_spin)
         g_sim.add_widget(dt_w)
-
-        # Simulation buttons
-        self._run_btn = _ribbon_button("Run", "Run Simulation (F5)", "run", "success")
-        self._stop_btn = _ribbon_button("Stop", "Stop Simulation", "stop", "error")
-        g_sim.add_widget(self._run_btn)
-        g_sim.add_widget(self._stop_btn)
         g_sim.finalize()
         row.addWidget(g_sim)
 
@@ -837,6 +846,19 @@ class AeonWindow(QMainWindow):
             f" background: {c['accent']};"
             f" border-color: {c['accent_hover']};"
             "}"
+            "QDoubleSpinBox#aeon_sim_spin, QComboBox#aeon_solver_combo {"
+            f" background: {c['bg_primary']};"
+            f" color: {c['text_primary']};"
+            f" border: 1px solid {c['border']};"
+            " border-radius: 5px;"
+            " min-height: 24px;"
+            " padding: 2px 8px;"
+            "}"
+            "QComboBox#aeon_solver_combo::drop-down {"
+            f" border-left: 1px solid {c['border']};"
+            f" background: {c['bg_secondary']};"
+            " width: 18px;"
+            "}"
             "QLabel#aeon_model_name {"
             f" color: {c['text_primary']};"
             " font-size: 12px;"
@@ -951,6 +973,18 @@ class AeonWindow(QMainWindow):
             self._sim_thread.requestInterruption()
             self._status.setText("Stop requested")
             self.aeon_canvas.set_wire_animation(False)
+
+    def _shutdown_simulation_thread(self) -> bool:
+        thread = self._sim_thread
+        if thread is None or not thread.isRunning():
+            return True
+        thread.requestInterruption()
+        thread.quit()
+        if thread.wait(2500):
+            self._sim_thread = None
+            self._sim_worker = None
+            return True
+        return False
 
     # ---------------------------------------------------------------
     # File I/O
@@ -1088,6 +1122,14 @@ class AeonWindow(QMainWindow):
             self.aeon_canvas.diagram_changed.emit()
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
+        if not self._shutdown_simulation_thread():
+            QMessageBox.warning(
+                self,
+                "Simulation Running",
+                "Stop the simulation before closing Aeon.",
+            )
+            event.ignore()
+            return
         self.closed.emit()
         super().closeEvent(event)
 
@@ -1117,7 +1159,12 @@ class _SimulationWorker(QObject):
 
     def run(self) -> None:
         try:
-            result = self._simulator.simulate(self._diagram, self._t_end, self._dt)
+            result = self._simulator.simulate(
+                self._diagram,
+                self._t_end,
+                self._dt,
+                should_stop=lambda: QThread.currentThread().isInterruptionRequested(),
+            )
             if result.get("success"):
                 self.finished.emit(result)
             else:

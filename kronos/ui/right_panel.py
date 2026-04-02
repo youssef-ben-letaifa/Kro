@@ -313,7 +313,7 @@ class SystemAnalysisPanel(QWidget):
 
         name, sys = systems[0]
         self._system_label.setText(f"System: {name}")
-        poles = ct.pole(sys)
+        poles = ct.poles(sys)
         self._poles_table.setRowCount(len(poles))
         stable = True
         marginal = False
@@ -344,17 +344,19 @@ class SystemAnalysisPanel(QWidget):
         gm, pm, wg, wp = ct.margin(sys)
         gm_db = 20 * np.log10(gm) if gm and gm > 0 else float("inf")
         pm_val = float(pm) if pm is not None else 0.0
-        pm_status = "Good" if pm_val > 45 else "Acceptable" if pm_val > 20 else "Poor"
+        pm_is_finite = np.isfinite(pm_val)
+        pm_status_value = pm_val if pm_is_finite else 90.0
+        pm_status = "Good" if pm_status_value > 45 else "Acceptable" if pm_status_value > 20 else "Poor"
         gm_text = "∞" if not np.isfinite(gm_db) else f"{gm_db:.2f} dB"
         self._gm_label.setText(f"Gain Margin: {gm_text}")
-        self._pm_label.setText(f"Phase Margin: {pm_val:.1f}°")
+        self._pm_label.setText("Phase Margin: ∞°" if not pm_is_finite else f"Phase Margin: {pm_val:.1f}°")
         self._crossover_label.setText(
             f"Gain crossover: {wg:.3g} rad/s | Phase crossover: {wp:.3g} rad/s"
             if wg and wp
             else "Gain crossover: — | Phase crossover: —"
         )
         self._gm_bar.setValue(100 if not np.isfinite(gm_db) else max(0, min(100, int(gm_db * 3))))
-        self._pm_bar.setValue(max(0, min(100, int(pm_val))))
+        self._pm_bar.setValue(100 if not pm_is_finite else max(0, min(100, int(pm_val))))
         rule_color = "#98c379" if pm_status == "Good" else "#e5c07b" if pm_status == "Acceptable" else "#e06c75"
         self._rule_label.setText(f"PM status: {pm_status}")
         self._rule_label.setStyleSheet(f"color: {rule_color}; font-weight: bold;")

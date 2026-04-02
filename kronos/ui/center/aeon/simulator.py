@@ -6,6 +6,7 @@ import ast
 import json
 import math
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -1556,7 +1557,13 @@ class DiagramSimulator(QObject):
                 state["first_sample"] = False
             return
 
-    def simulate(self, diagram: dict, t_end: float = 10.0, dt: float = 0.01) -> dict:
+    def simulate(
+        self,
+        diagram: dict,
+        t_end: float = 10.0,
+        dt: float = 0.01,
+        should_stop: Callable[[], bool] | None = None,
+    ) -> dict:
         """Simulate diagram and return time series outputs and variables."""
         if t_end <= 0.0:
             error = "t_end must be greater than 0."
@@ -1593,6 +1600,9 @@ class DiagramSimulator(QObject):
 
         try:
             for step, time_now in enumerate(base_time):
+                if should_stop is not None and should_stop():
+                    context["stop_requested"] = True
+                    break
                 context["goto_tags"] = {}
                 time_points.append(float(time_now))
 

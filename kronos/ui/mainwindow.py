@@ -297,6 +297,10 @@ class MainWindow(QMainWindow):
         edit_menu.addSeparator()
         self.menu_find = edit_menu.addAction("Find")
         self.menu_replace = edit_menu.addAction("Replace")
+        self.menu_find.setEnabled(False)
+        self.menu_find.setToolTip("Coming soon")
+        self.menu_replace.setEnabled(False)
+        self.menu_replace.setToolTip("Coming soon")
 
         run_menu = menubar.addMenu("Run")
         self.menu_run_file = run_menu.addAction("Run File")
@@ -347,6 +351,9 @@ class MainWindow(QMainWindow):
         self.menu_restart_kernel.triggered.connect(self._on_restart_kernel)
         self.menu_open.triggered.connect(self._on_open)
         self.menu_save.triggered.connect(self._on_save)
+        self.menu_save_as.triggered.connect(self._on_save_as)
+        self.menu_undo.triggered.connect(self._on_undo)
+        self.menu_redo.triggered.connect(self._on_redo)
         self.menu_new.triggered.connect(self._on_new)
         self.menu_exit.triggered.connect(self.close)
         self.menu_bode.triggered.connect(self._open_bode_wizard)
@@ -356,6 +363,7 @@ class MainWindow(QMainWindow):
         self.menu_lqr.triggered.connect(self._open_lqr_designer)
         self.menu_freq.triggered.connect(self._open_frequency_analyzer)
         self.menu_preferences.triggered.connect(self._open_preferences)
+        self.menu_docs.triggered.connect(self._open_documentation)
         self.menu_about.triggered.connect(self._open_about)
 
         self.left_panel.file_open_requested.connect(self._on_open_file)
@@ -389,7 +397,7 @@ class MainWindow(QMainWindow):
     def _on_open_file(self, path: str) -> None:
         try:
             code = Path(path).read_text(encoding="utf-8")
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             QMessageBox.warning(self, "Open failed", str(exc))
             return
         self.center_panel.open_document(path, code)
@@ -451,20 +459,19 @@ class MainWindow(QMainWindow):
         )
         self.status.set_kernel_status(True)
 
-    def _on_save(self) -> None:
+    def _default_save_path(self) -> Path:
         current_path = self.center_panel.current_file_path()
-        save_path: Path
-
         if current_path:
-            save_path = Path(current_path)
-        else:
-            suggested_name = self.center_panel.current_tab_name()
-            if not suggested_name:
-                suggested_name = "untitled.py"
-            if not suggested_name.lower().endswith(".py"):
-                suggested_name = f"{suggested_name}.py"
+            return Path(current_path)
+        suggested_name = self.center_panel.current_tab_name() or "untitled.py"
+        if not suggested_name.lower().endswith(".py"):
+            suggested_name = f"{suggested_name}.py"
+        return Path(os.getcwd()) / suggested_name
 
-            initial_path = str(Path(os.getcwd()) / suggested_name)
+    def _save_current_code(self, force_dialog: bool = False) -> None:
+        save_path: Path
+        if force_dialog:
+            initial_path = str(self._default_save_path())
             chosen_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save File",
@@ -476,6 +483,13 @@ class MainWindow(QMainWindow):
             save_path = Path(chosen_path)
             if not save_path.suffix:
                 save_path = save_path.with_suffix(".py")
+        else:
+            current_path = self.center_panel.current_file_path()
+            if current_path:
+                save_path = Path(current_path)
+            else:
+                self._save_current_code(force_dialog=True)
+                return
 
         try:
             save_path.write_text(self.center_panel.get_current_code(), encoding="utf-8")
@@ -488,6 +502,12 @@ class MainWindow(QMainWindow):
         self.settings_manager.add_recent_file(saved)
         self._rebuild_recent_menu()
         self.ribbon.set_breadcrumb(str(save_path.parent))
+
+    def _on_save(self) -> None:
+        self._save_current_code(force_dialog=False)
+
+    def _on_save_as(self) -> None:
+        self._save_current_code(force_dialog=True)
 
     def _on_open(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -503,6 +523,26 @@ class MainWindow(QMainWindow):
 
     def _on_new(self) -> None:
         self.center_panel.new_file()
+
+    def _current_editor(self):
+        getter = getattr(self.center_panel, "_current_editor", None)
+        if callable(getter):
+            return getter()
+        return getattr(self.center_panel, "editor", None)
+
+    def _on_undo(self) -> None:
+        editor = self._current_editor()
+        if editor is None or not hasattr(editor, "undo"):
+            self.status.showMessage("Undo unavailable for current tab", 1800)
+            return
+        editor.undo()
+
+    def _on_redo(self) -> None:
+        editor = self._current_editor()
+        if editor is None or not hasattr(editor, "redo"):
+            self.status.showMessage("Redo unavailable for current tab", 1800)
+            return
+        editor.redo()
 
     def _hide_figure_panel_initial(self) -> None:
         self.figure_panel.hide()
@@ -794,6 +834,8 @@ class MainWindow(QMainWindow):
             "toolboxes":        (lambda: self._open_toolbox_picker(),),
             "find_files":       (lambda: self.left_panel.show_files_section(),),
             "about":            (lambda: self._open_about(),),
+            "undo":             (lambda: self._on_undo(),),
+            "redo":             (lambda: self._on_redo(),),
         }
         entry = dispatch.get(action_id)
         if entry:
@@ -915,6 +957,13 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self, "Toolbox Error", f"Failed to open '{name}':\n{exc}")
             return
+        if window is None:
+            QMessageBox.warning(
+                self,
+                "Toolbox Error",
+                f"Toolbox '{name}' did not return a window instance.",
+            )
+            return
 
         self._toolbox_windows[name] = window
         if hasattr(window, "closed"):
@@ -953,6 +1002,24 @@ class MainWindow(QMainWindow):
 
         dlg = AboutDialog(self)
         dlg.exec()
+
+    def _open_documentation(self) -> None:
+        readme_path = Path(__file__).resolve().parents[2] / "README.md"
+        if not readme_path.exists():
+            QMessageBox.information(
+                self,
+                "Documentation",
+                "README.md is not available in this build.",
+            )
+            return
+        try:
+            code = readme_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            QMessageBox.warning(self, "Documentation", f"Could not open README.md:\n{exc}")
+            return
+        self.center_panel.open_document(str(readme_path), code)
+        self.ribbon.set_breadcrumb(str(readme_path.parent))
+        self.status.showMessage("Opened README documentation", 2200)
 
     def _on_settings_changed(self, changes: dict) -> None:
         if "appearance/theme" in changes:
@@ -996,10 +1063,14 @@ class MainWindow(QMainWindow):
         grid_color = "#313244"
         title_color = "#cdd6f4"
 
-        for scope_id, signal in result["outputs"].items():
+        outputs = result.get("outputs", {})
+        time_values = result.get("time", [])
+        variables = result.get("variables", {})
+
+        for scope_id, signal in outputs.items():
             fig = Figure(facecolor=fig_face)
             ax = fig.add_subplot(111)
-            ax.plot(result["time"], signal, color=line_color, linewidth=1.5)
+            ax.plot(time_values, signal, color=line_color, linewidth=1.5)
             ax.set_facecolor(ax_face)
             ax.tick_params(colors=tick_color)
             for spine in ax.spines.values():
@@ -1016,7 +1087,7 @@ class MainWindow(QMainWindow):
                 except Exception:
                     pass
 
-        for var_name, value in result["variables"].items():
+        for var_name, value in variables.items():
             self.console_panel.execute(f"{var_name} = {repr(value)}")
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
@@ -1035,6 +1106,10 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
             self._aeon_window = None
+        try:
+            self.center_panel.shutdown()
+        except Exception:
+            pass
         for name, window in list(self._toolbox_windows.items()):
             try:
                 window.close()

@@ -265,7 +265,7 @@ class PIDTunerDialog(QDialog):
         self.metrics["Peak time"].setText(f"{metrics['peak_time']:.2f}s")
         self._apply_metric_colors(metrics)
 
-        poles = ct.pole(closed)
+        poles = ct.poles(closed)
         self.poles_table.setRowCount(len(poles))
         for idx, pole in enumerate(poles):
             stable = pole.real < 0

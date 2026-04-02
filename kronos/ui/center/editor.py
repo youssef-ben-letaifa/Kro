@@ -310,6 +310,7 @@ class CenterPanel(QWidget):
         self.aeon_canvas.load_demo_diagram()
         self._simulator = DiagramSimulator()
         self._sim_thread: QThread | None = None
+        self._sim_worker: _SimulationWorker | None = None
         self._new_file_button = QToolButton()
         self._new_file_button.setText("+")
         self._new_file_button.setToolTip("New file tab")
@@ -600,6 +601,16 @@ class CenterPanel(QWidget):
             self.sim_status.setText("Stop requested")
             self.aeon_canvas.set_wire_animation(False)
 
+    def shutdown(self) -> None:
+        """Stop background simulation worker before widget destruction."""
+        if self._sim_thread is None or not self._sim_thread.isRunning():
+            return
+        self._sim_thread.requestInterruption()
+        self._sim_thread.quit()
+        if self._sim_thread.wait(2500):
+            self._sim_thread = None
+            self._sim_worker = None
+
     def _save_diagram(self) -> None:
         path, _ = QFileDialog.getSaveFileName(self, "Save Diagram", "", "Aeon Files (*.sim)")
         if not path:
@@ -693,7 +704,12 @@ class _SimulationWorker(QObject):
 
     def run(self) -> None:
         try:
-            result = self._simulator.simulate(self._diagram, self._t_end, self._dt)
+            result = self._simulator.simulate(
+                self._diagram,
+                self._t_end,
+                self._dt,
+                should_stop=lambda: QThread.currentThread().isInterruptionRequested(),
+            )
             if result.get("success"):
                 self.finished.emit(result)
             else:

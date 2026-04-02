@@ -2,7 +2,7 @@
 Categories=Science;Development;IDE;
 Comment[en_US]=Kronos IDE
 Comment=Kronos IDE
-Exec=/home/youssef-ben-letaifa/Desktop/Kronos\ Project/Kro/run-kronos.sh
+Exec=/usr/bin/env bash "/home/youssef-ben-letaifa/Desktop/Kronos Project/Kro/run-kronos.sh"
 GenericName[en_US]=
 GenericName=
 Icon=/home/youssef-ben-letaifa/Desktop/Kronos Project/Kro/iconK.ico

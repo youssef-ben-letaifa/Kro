@@ -1,132 +1,128 @@
-<p align="center">
-  <img src="loading.png" alt="Kronos logo" width="960" />
-</p>
+# Kronos IDE
 
-<h1 align="center">Kronos IDE</h1>
-<p align="center">
-  Open-source, Python-native scientific simulation IDE.
-</p>
+Kronos is an open-source scientific IDE and simulation environment built as a Python-native alternative to MATLAB workflows.
 
-<p align="center">
-  <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
-  <img alt="UI PyQt6" src="https://img.shields.io/badge/UI-PyQt6-41CD52?logo=qt&logoColor=white">
-  <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-111827">
-</p>
+It combines:
+- a multi-tab code editor,
+- an embedded command/kernel workflow,
+- workspace and plotting panels,
+- **Signal Analysis toolbox**,
+- **Aeon visual simulation canvas**.
 
-Kronos combines a Python code editor, an embedded IPython kernel, plotting workflows, block-diagram simulation (Aeon), and extensible engineering toolboxes in one desktop application.
+## Screenshots
 
-## Why Kronos
+### First Look
+![Kronos first look](images/first%20look.png)
 
-- Integrated workflow: edit, run, inspect workspace, and visualize plots from one UI.
-- Engineering-focused simulation: Aeon diagram modeling plus toolbox-based domain workflows.
-- Extensible architecture: dynamic toolbox loading and optional native C++ acceleration.
-- Practical defaults: persistent settings, runtime fallbacks, and environment verification script.
+### Coding Workflow
+![Kronos code example](images/code%20example.png)
 
-## Quick Start
+### Signal Analysis Toolbox
+![Kronos Signal Analyzer](images/Signal%20Analyzer.png)
 
-### 1) Install (Linux helper)
+### Aeon Visual Simulation Canvas
+![Kronos Aeon canvas](images/Aeon.png)
+
+## Release Status (v1.0)
+
+This branch is stabilized for public release:
+- crash-prone UI paths in control-analysis dialogs were fixed,
+- Aeon simulation thread shutdown is now safe when closing windows,
+- incomplete ribbon actions are explicitly disabled with `Coming soon` tooltips instead of acting as silent no-ops.
+
+## What Works
+
+### Core IDE
+- Multi-tab Python editing (`.py` files)
+- Run code in integrated command workflow
+- Workspace browser updates
+- Plot capture/gallery integration
+- Recent files and save/save-as support
+
+### Signal Analysis Toolbox
+- Import signals (`.wav`, `.csv`, `.txt`, `.npy`, `.mat`, `.ksa`)
+- Time/spectrum/spectrogram/scalogram/persistence views
+- Filtering (quick filters + filter designer)
+- Measurements panel and CSV export
+- Signal duplication, export, and script generation
+
+### Aeon Visual Simulation Canvas
+- Block library and drag/drop modeling
+- Diagram validation and auto-arrange
+- Simulation run/stop
+- Scope outputs and runtime status
+- Save/load `.sim` diagrams
+
+## Tech Stack
+
+- **Languages:** Python, C, C++
+- **Desktop UI:** PyQt6
+- **Numerics & science:** NumPy, SciPy, Matplotlib, SymPy
+- **Control systems:** python-control (+ optional Slycot)
+- **Graph/simulation infra:** NetworkX
+- **Kernel/console integration:** IPython, ipykernel, jupyter_client, qtconsole
+- **Native acceleration path:** CPython extensions (`kronos/native`, `kronos_cpp`)
+
+## Installation
+
+### Option A: Standard Python setup
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+```
+
+### Option B: Project helper scripts
 
 ```bash
 bash install.sh
-```
-
-### 2) Launch
-
-```bash
-source .venv/bin/activate
-python -m kronos.main
-```
-
-### 3) Verify environment
-
-```bash
 bash verify.sh
 ```
 
-## Project Structure
+## Run
+
+```bash
+source .venv/bin/activate
+python -m kronos.main
+```
+
+Or, after editable install:
+
+```bash
+kronos
+```
+
+## Test
+
+```bash
+MPLCONFIGDIR=/tmp/matplotlib-kronos QT_QPA_PLATFORM=offscreen ./.venv/bin/python -m pytest -q tests
+```
+
+## Project Layout
 
 ```text
-Kro/
-  kronos/
-    main.py
-    engine/              # Kernel bridge, routing, settings, workspace, plot export
-    ui/                  # Main window, panels, editor, Aeon canvas, dialogs, theme
-    toolboxes/           # Dynamic toolbox registry + bundled toolboxes
-    native/              # Python bridge for compiled native modules
-  kronos_cpp/            # C++/Qt modules (pybind11 + CMake)
-  tests/                 # Unit and smoke tests
-  install.sh             # Full environment + build setup
-  verify.sh              # Post-install checks
+kronos/
+  engine/                     # kernel bridge, routing, settings, workspace, plots
+  ui/                         # main window, panels, dialogs, Aeon canvas, themes
+  toolboxes/
+    signal_analyzer/          # Signal Analysis toolbox
+    Autonomous Driving Toolbox/  # experimental/secondary toolbox
+  native/                     # CPython extension modules
+kronos_cpp/                   # C/C++ extension sources
+tests/                        # automated tests
 ```
 
-## Architecture
+## Roadmap
 
-```mermaid
-flowchart LR
-    A[PyQt6 App Shell<br/>kronos.main + ui.mainwindow] --> B[Engine Services<br/>kernel_bridge, router, settings, workspace]
-    A --> C[UI Modules<br/>editor, console, figures, aeon]
-    A --> D[Toolbox Registry<br/>kronos.toolboxes.registry]
-    C --> B
-    D --> E[Autonomous Driving Toolbox]
-    A -. optional .-> F[Native Extensions<br/>kronos_cpp -> kronos/native]
-```
+1. Expand currently disabled ribbon commands into full implementations (debug/live-editor/advanced plot tooling).
+2. Deepen Signal Analysis UX (peak finder labeling workflow, normalized/two-sided spectrum modes).
+3. Add richer Aeon debugging/inspection tools (step tracing, breakpoints, diagnostics overlays).
+4. Ship cross-platform packaging and signed binaries.
+5. Grow user-facing docs/tutorials and example projects.
 
-### Core Layers
+## License
 
-- App shell: startup, splash, window composition, signal wiring.
-- Engine layer: IPython execution bridge, message routing, workspace inspection, plot transfer.
-- UI layer: editor, command window, Aeon canvas/simulator, themed widgets.
-- Toolbox layer: runtime discovery/import of toolbox packages.
-- Native bridge: optional pybind11 modules with Python fallbacks when unavailable.
-
-## Toolboxes
-
-Kronos discovers toolboxes from `kronos/toolboxes` and loads them dynamically.  
-The repository currently includes `Autonomous Driving Toolbox` with:
-
-- Bird's-eye 2D visualization,
-- OpenGL 3D view,
-- Sensors/perception panels,
-- ADAS and planning simulation flow,
-- HD map ingestion (OpenDRIVE and Lanelet2 in tests).
-
-## Development Commands
-
-Run tests:
-
-```bash
-source .venv/bin/activate
-python -m unittest discover -s tests -v
-```
-
-Run smoke test:
-
-```bash
-source .venv/bin/activate
-python kronos_smoke_test.py
-```
-
-## Runtime Notes (Linux)
-
-If Qt display backend fails:
-
-```bash
-export QT_QPA_PLATFORM=xcb
-python -m kronos.main
-```
-
-If OpenGL setup fails:
-
-```bash
-export LIBGL_ALWAYS_SOFTWARE=1
-python -m kronos.main
-```
-
-## Git Hygiene
-
-This repo includes a `.gitignore` for Python caches, virtualenvs, and build artifacts.  
-If `__pycache__` / `.pyc` files were tracked before, untrack once:
-
-```bash
-git rm -r --cached -- ':(glob)**/__pycache__/**' ':(glob)**/*.pyc'
-```
+MIT

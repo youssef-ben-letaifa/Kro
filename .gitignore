@@ -46,3 +46,7 @@ kronos/native/*.so
 
 # Logs
 *.log
+
+# Local archives
+pycharm-*.tar.gz
+*.tar.gz

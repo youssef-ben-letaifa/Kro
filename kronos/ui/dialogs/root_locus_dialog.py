@@ -142,8 +142,8 @@ class RootLocusDialog(QDialog):
                         color="#1a6fff", linewidth=1.2)
 
         # Plot open-loop poles and zeros
-        poles = ct.pole(sys)
-        zeros = ct.zero(sys)
+        poles = ct.poles(sys)
+        zeros = ct.zeros(sys)
         ax.plot(poles.real, poles.imag, "x", color="#e06c75",
                 markersize=10, markeredgewidth=2, label="Poles")
         if len(zeros) > 0:

@@ -21,6 +21,51 @@ from PyQt6.QtWidgets import (
 from kronos.ui.theme.design_tokens import get_colors
 from kronos.ui.theme.fluent_icons import icon_for
 
+_UNAVAILABLE_ACTION_IDS = {
+    "import_data",
+    "new_variable",
+    "analyze_code",
+    "add_ons",
+    "plot_line",
+    "plot_scatter",
+    "plot_bar",
+    "plot_hist",
+    "plot_surf",
+    "plot_mesh",
+    "plot_contour",
+    "plot_box",
+    "plot_errorbar",
+    "plot_matrix",
+    "plot_polar",
+    "plot_compass",
+    "app_signal",
+    "app_stats",
+    "app_ml",
+    "app_deep",
+    "publish",
+    "go_to",
+    "find",
+    "format",
+    "run_selection",
+    "bp_toggle",
+    "bp_clear",
+    "profiler",
+    "live_insert_text",
+    "live_insert_eq",
+    "live_insert_ctrl",
+    "live_heading",
+    "live_list",
+    "live_view_inline",
+    "live_hide_code",
+    "debug_step",
+    "debug_step_in",
+    "debug_continue",
+    "debug_quit",
+    "bp_conditional",
+    "bp_error",
+    "debug_stack",
+}
+
 
 class _RibbonGroup(QFrame):
     """Ribbon group container with section label."""
@@ -120,9 +165,11 @@ class MatlabRibbon(QWidget):
         self.tabs.addTab(self._build_debug_tab(), "DEBUG")
         self.tabs.addTab(self._build_quantum_tab(), "QUANTUM")
         self.tabs.addTab(self._build_symbolic_tab(), "SYMBOLIC")
+        self._disable_unavailable_actions()
 
         root.addWidget(self.tabs, 1)
         root.addWidget(self._build_path_row())
+        self._disable_unavailable_actions()
 
     def _build_quick_row(self) -> QWidget:
         row = QWidget()
@@ -466,9 +513,9 @@ class MatlabRibbon(QWidget):
         panel = self._panel()
         row = panel.layout()
         group = _RibbonGroup("QUANTUM")
-        group.add_button(
-            self._action_button("Coming Soon", "Quantum tools are coming soon", "apps")
-        )
+        button = self._action_button("Coming Soon", "Quantum tools are coming soon", "apps")
+        self._mark_coming_soon(button)
+        group.add_button(button)
         group.finalize()
         row.addWidget(group)
         row.addStretch(1)
@@ -478,17 +525,11 @@ class MatlabRibbon(QWidget):
         panel = self._panel()
         row = panel.layout()
         group = _RibbonGroup("SYMBOLIC")
-        group.add_button(
-            self._action_button("Coming Soon", "Symbolic tools are coming soon", "math_formula")
-        )
+        button = self._action_button("Coming Soon", "Symbolic tools are coming soon", "math_formula")
+        self._mark_coming_soon(button)
+        group.add_button(button)
         group.finalize()
         row.addWidget(group)
-        row.addStretch(1)
-        return panel
-
-    def _build_help_tab(self) -> QWidget:
-        panel = self._panel()
-        row = panel.layout()
         row.addStretch(1)
         return panel
 
@@ -511,11 +552,12 @@ class MatlabRibbon(QWidget):
         button = QToolButton()
         button.setObjectName("ribbon_quick_button")
         button.setProperty("icon_name", icon_name)
+        button.setProperty("action_id", action_id or "")
         button.setToolTip(tooltip)
-        button.setIcon(self._build_icon(icon_name, size=18))
-        button.setIconSize(QSize(18, 18))
+        button.setIcon(self._build_icon(icon_name, size=22))
+        button.setIconSize(QSize(22, 22))
         button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        button.setFixedSize(28, 28)
+        button.setFixedSize(34, 34)
         if signal is not None:
             button.clicked.connect(signal.emit)
         elif action_id is not None:
@@ -529,6 +571,7 @@ class MatlabRibbon(QWidget):
         button.setIcon(self._build_icon(icon_name, size=16))
         button.setIconSize(QSize(16, 16))
         button.setFixedSize(24, 24)
+        self._mark_coming_soon(button)
         return button
 
     def _action_button(
@@ -544,6 +587,7 @@ class MatlabRibbon(QWidget):
         button = QToolButton()
         button.setObjectName("ribbon_action_primary" if primary else "ribbon_action_compact")
         button.setProperty("icon_name", icon_name)
+        button.setProperty("action_id", action_id or "")
         button.setText(text)
         button.setToolTip(tooltip)
         icon_size = 22 if primary else 16
@@ -558,6 +602,20 @@ class MatlabRibbon(QWidget):
         elif action_id is not None:
             button.clicked.connect(lambda _checked=False, aid=action_id: self.action_requested.emit(aid))
         return button
+
+    @staticmethod
+    def _mark_coming_soon(button: QToolButton) -> None:
+        tooltip = button.toolTip().strip()
+        if "coming soon" not in tooltip.lower():
+            tooltip = f"{tooltip} (Coming soon)"
+        button.setToolTip(tooltip)
+        button.setEnabled(False)
+
+    def _disable_unavailable_actions(self) -> None:
+        for button in self.findChildren(QToolButton):
+            action_id = button.property("action_id")
+            if isinstance(action_id, str) and action_id in _UNAVAILABLE_ACTION_IDS:
+                self._mark_coming_soon(button)
 
     def _control_button(
         self, text: str, tooltip: str, icon_name: str, signal: pyqtSignal
@@ -616,7 +674,7 @@ class MatlabRibbon(QWidget):
     def set_theme_icon(self, theme: str) -> None:
         del theme
         icon_name = "theme_dark"
-        self._theme_button.setIcon(self._build_icon(icon_name, size=18))
+        self._theme_button.setIcon(self._build_icon(icon_name, size=22))
         self._theme_button.setProperty("icon_name", icon_name)
 
     def refresh_theme(self) -> None:
@@ -624,7 +682,7 @@ class MatlabRibbon(QWidget):
             name = btn.property("icon_name")
             if name:
                 if btn.objectName() == "ribbon_quick_button":
-                    size = 18
+                    size = 22
                 elif btn.objectName() == "ribbon_path_button":
                     size = 16
                 elif btn.objectName() == "ribbon_action_primary":
